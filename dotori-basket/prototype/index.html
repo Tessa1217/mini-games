@@ -1,0 +1,1020 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>도토리 숲 바구니 — 프로토타입</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
+<style>
+  :root{
+    --sky:#C4E1F4; --grass:#B4C391; --ink:#4A3A2A; --rim:#46200E;
+    --paper:#FBF4E4; --deep:#F3E7CD; --line:#DFCFAE; --sage:#7E8C70;
+    --red:#C4202B; --muted:#8A7B63;
+    --disp:'Gaegu','Gowun Dodum',system-ui,sans-serif;
+    --body:'Gowun Dodum',system-ui,-apple-system,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  /* hidden 속성은 UA의 display:none 한 줄뿐이라 #over{display:flex} 같은 규칙에 진다.
+     el.hidden을 토글해서 숨기는 곳이 있으므로 여기서 한 번 못박는다. */
+  [hidden]{display:none!important}
+  html,body{margin:0;height:100%}
+  body{background:var(--paper); color:var(--ink); font-family:var(--body);
+       display:flex; flex-direction:column; align-items:center; gap:14px;
+       padding:14px 12px 28px; overflow-x:hidden;
+       -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+
+  #fit{width:360px; transform-origin:50% 0; will-change:transform;}
+
+  /* ── 스테이지 ── */
+  #stage{position:relative; width:360px; height:640px; overflow:hidden;
+    border:3px solid var(--ink); border-radius:16px; background:var(--sky);
+    touch-action:none; contain:paint;}
+  #bg{position:absolute; left:0; bottom:0; width:360px; height:360px;
+    background:url(../assets/game/bg.jpg) center/cover no-repeat;}
+  #laneHi{position:absolute; top:0; left:0; width:72px; height:100%;
+    background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.28) 78%);
+    pointer-events:none;}
+  #catch{position:absolute; left:0; width:100%; height:0;
+    border-top:2px dashed rgba(196,32,43,.45); display:none;}
+
+  .rim{filter:drop-shadow(1px 0 0 var(--rim)) drop-shadow(-1px 0 0 var(--rim))
+             drop-shadow(0 1px 0 var(--rim)) drop-shadow(0 -1px 0 var(--rim));}
+  .rim2{filter:drop-shadow(2px 0 0 var(--rim)) drop-shadow(-2px 0 0 var(--rim))
+              drop-shadow(0 2px 0 var(--rim)) drop-shadow(0 -2px 0 var(--rim));}
+
+  #items{position:absolute; inset:0; pointer-events:none;}
+  .drop{position:absolute; top:0; left:0; width:48px; height:48px; will-change:transform;}
+  .drop img{width:48px; height:48px; object-fit:contain; display:block;}
+
+  /* 다람쥐는 꼬리가 오른쪽으로 뻗어 있어 바운딩 박스 중심과 몸 축이 어긋난다.
+     실측: 바구니 중심 −101.5px, 발 중심 −103.0px (전체 폭 729) → 몸 축 = 폭의 35.9%.
+     박스 중심으로 맞추면 정작 바구니가 왼쪽으로 치우친다. 판정은 바구니에서 일어나므로
+     몸 축을 레인 중심에 맞춘다. */
+  :root{ --sq-axis:35.9%; }
+  #squirrel{position:absolute; left:0; top:500px; width:82px; height:104px;
+    will-change:transform; transform-origin:var(--sq-axis) 100%;}
+  #squirrel img{width:82px; height:104px; object-fit:contain; display:block;}
+
+  /* ── HUD ── */
+  #hud{position:absolute; inset:8px 10px auto 10px; pointer-events:none;
+    display:flex; flex-direction:column; gap:7px;}
+  .row{display:flex; align-items:center; gap:8px;}
+  #hp{display:flex; gap:4px}
+  #hp i{width:13px; height:15px; border-radius:50% 50% 45% 45%;
+    background:var(--red); border:1.5px solid var(--rim); display:block;}
+  #hp i.off{background:rgba(255,255,255,.55)}
+  .chip{font-family:var(--mono); font-size:11px; padding:2px 8px; border-radius:999px;
+    background:rgba(255,255,255,.8); border:1.5px solid var(--rim); color:var(--ink);}
+  #btnPause{margin-left:auto; margin-right:8px; pointer-events:auto; cursor:pointer; flex:none;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center; gap:3px;
+    background:rgba(255,255,255,.8); border:2px solid var(--rim); border-radius:9px; padding:0;}
+  #btnPause i{display:block; width:4px; height:13px; background:var(--rim); border-radius:1.5px}
+  #btnPause:active{transform:translateY(1px)}
+  #btnPause:focus-visible{outline:3px solid var(--red); outline-offset:2px}
+  #score{ font-family:var(--disp); font-weight:700; font-size:26px;
+    line-height:1; color:#fff; -webkit-text-stroke:2.5px var(--rim);
+    paint-order:stroke fill; font-variant-numeric:tabular-nums;}
+  #combo{font-family:var(--disp); font-weight:700; font-size:15px; color:#fff;
+    -webkit-text-stroke:2px var(--rim); paint-order:stroke fill;}
+
+  /* 레시피 바 — 스테이지 밖 하단. 레시피는 Lv7에서 5칸까지 늘어나므로 폭 360을
+     통째로 쓸 수 있는 자리가 필요하고, 스테이지 안쪽 하단은 다람쥐(y 500~604)가 쓴다. */
+  #recipebar{width:360px; margin-top:8px; padding:8px 10px 9px;
+    background:var(--deep); border:2.5px solid var(--ink); border-radius:14px;
+    display:flex; flex-direction:column; gap:7px;}
+  #queue{display:flex; align-items:center; justify-content:center; gap:4px; min-height:36px;}
+  .qi{width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    border-radius:9px; background:rgba(255,255,255,.55);}
+  .qi img{width:30px; height:30px; object-fit:contain}
+  .qi.now{background:rgba(196,32,43,.16); outline:2.5px solid var(--red); outline-offset:-2px}
+  .qi.done{opacity:.28}
+  .arw{font-size:12px; color:var(--muted)}
+
+  #timerBar{height:7px; background:rgba(255,255,255,.72);
+    border:1.5px solid var(--rim); border-radius:999px; overflow:hidden;}
+  #timerFill{display:block; height:100%; width:100%; background:var(--sage);
+    transform-origin:0 50%;}
+  #timerBar.warn #timerFill{background:var(--red)}
+
+  #banner{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none;}
+  #banner .wrap2{display:flex; flex-direction:column; align-items:center; gap:2px}
+  #banner b{font-family:var(--disp); font-size:48px; color:#fff; line-height:1;
+    -webkit-text-stroke:5px var(--rim); paint-order:stroke fill;}
+  #banner em{font-style:normal; font-family:var(--disp); font-size:19px; color:#fff;
+    -webkit-text-stroke:3px var(--rim); paint-order:stroke fill;}
+
+  /* ── 화면 오버레이 (로딩 · 타이틀 · 놀이법 · 해금) ── */
+  /* 숲길 배경 — 기존 배경의 나무를 잘라 가운데까지 채운 것.
+     게임 화면은 낙하 경로를 비워야 해서 좌우에만 나무가 있지만, 화면 오버레이는
+     떨어지는 게 없으므로 숲이 이어지는 편이 자연스럽다. */
+  .screen{position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; padding:22px;
+    text-align:center; background-color:var(--sky);
+    background-image:url(../assets/game/bg-forest-full.jpg);
+    background-size:cover; background-position:center bottom; background-repeat:no-repeat;}
+  .screen[hidden]{display:none!important}
+  .screen h2{font-family:var(--disp); font-size:34px; margin:0; line-height:1.1;
+    color:#fff; -webkit-text-stroke:4px var(--rim); paint-order:stroke fill;}
+  .screen p{margin:0; font-size:13.5px; color:var(--ink); max-width:30ch; line-height:1.55;
+    word-break:keep-all; background:rgba(255,255,255,.78); border-radius:12px;
+    padding:7px 13px;}
+  .big-btn{font-family:var(--disp); font-size:23px; font-weight:700; cursor:pointer;
+    background:var(--red); color:var(--paper); border:3px solid var(--rim);
+    border-radius:999px; padding:10px 34px; min-width:168px;}
+  .big-btn.ghost{background:var(--paper); color:var(--ink)}
+  .big-btn:active{transform:translateY(2px)}
+  .big-btn:focus-visible{outline:3px solid var(--sage); outline-offset:3px}
+
+  #scr-load p{background:rgba(255,255,255,.82)}
+  #scr-load .bar{width:190px; height:10px; border:2px solid var(--rim); border-radius:999px;
+    background:rgba(255,255,255,.7); overflow:hidden}
+  #scr-load .bar i{display:block; height:100%; width:0; background:var(--sage);
+    transition:width .18s}
+
+  #scr-title .hero{width:132px; height:auto; image-rendering:auto;
+    transform:translateX(calc(50% - var(--sq-axis)));}   /* 몸 축을 화면 중앙에 */
+  #scr-title .best{font-family:var(--mono); font-size:12px; color:var(--ink);
+    background:rgba(255,255,255,.75); border:1.5px solid var(--rim);
+    border-radius:999px; padding:3px 12px}
+
+  /* 놀이법은 내용이 길어 스크롤된다 — 스테이지 높이를 넘기지 않게 */
+  #scr-tut{justify-content:flex-start; overflow-y:auto; gap:8px; padding:16px 16px 14px;
+    background-position:center top;}
+  #scr-tut h2{font-size:26px}
+  /* 버튼은 한 줄로 — 세로로 쌓으면 5개 규칙과 합쳐 스테이지 높이를 넘긴다 */
+  #scr-tut .tutacts{display:flex; gap:8px; width:100%; margin-top:2px}
+  #scr-tut .tutacts .big-btn{flex:1; min-width:0; font-size:19px; padding:9px 10px}
+  .rule{display:flex; gap:10px; align-items:center; text-align:left; width:100%;
+    background:rgba(255,255,255,.8); border:2px solid var(--rim); border-radius:11px;
+    padding:7px 10px}
+  .rule .ic{flex:none; width:40px; display:flex; align-items:center; justify-content:center; gap:1px;
+    font-size:22px}
+  .rule .ic img{width:27px; height:27px; object-fit:contain}
+  .rule .ic.two img{width:21px; height:21px}
+  .rule b{display:block; font-family:var(--disp); font-size:16px; line-height:1.15}
+  .rule span{font-size:12.5px; color:var(--muted); line-height:1.45; word-break:keep-all}
+  .keycap{font-family:var(--mono); font-size:12px; border:1.5px solid var(--rim);
+    border-bottom-width:3px; border-radius:5px; padding:1px 6px; background:#fff}
+
+  /* 일시정지는 멈춘 판이 뒤에 비쳐야 안심이 된다 — 숲길 배경 대신 스크림 */
+  #scr-pause{background:rgba(74,58,42,.72)}
+  #scr-pause .card{background:var(--paper); border:3px solid var(--rim); border-radius:18px;
+    padding:22px 24px; display:flex; flex-direction:column; align-items:center; gap:9px;
+    min-width:212px}
+  #scr-pause h3{margin:0 0 4px; font-family:var(--disp); font-size:27px}
+  #scr-pause .big-btn{width:100%; font-size:19px; padding:9px 18px; min-width:0}
+  #scr-unlock{background:rgba(74,58,42,.72)}
+  #scr-unlock .card{background:var(--paper); border:3px solid var(--rim); border-radius:18px;
+    padding:20px 24px; display:flex; flex-direction:column; align-items:center; gap:12px;
+    max-width:300px}
+  #scr-unlock .lvl{font-family:var(--disp); font-size:40px; font-weight:700; line-height:1;
+    color:var(--sage)}
+  #scr-unlock .grp{width:100%}
+  #scr-unlock .grp h3{margin:0 0 6px; font-family:var(--disp); font-size:17px}
+  #scr-unlock .row{display:flex; flex-wrap:wrap; justify-content:center; gap:9px}
+  #scr-unlock .it{display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:11.5px; color:var(--muted)}
+  #scr-unlock .it img{width:42px; height:42px; object-fit:contain}
+  #scr-unlock .hint{font-size:11.5px; color:var(--muted); word-break:keep-all}
+  #scr-unlock .grp.warn h3{color:var(--red)}
+
+  #over{position:absolute; inset:0; background:rgba(74,58,42,.62);
+    display:flex; align-items:center; justify-content:center;}
+  #over .box{background:var(--paper); border:3px solid var(--ink); border-radius:16px;
+    padding:22px 26px; text-align:center; display:flex; flex-direction:column; gap:4px}
+  #over h3{font-family:var(--disp); font-size:30px; margin:0 0 2px}
+  #over .big{font-family:var(--disp); font-size:46px; font-weight:700; line-height:1.1}
+  #over .best{font-size:13px; color:var(--muted); margin-bottom:14px}
+  #over .acts{display:flex; flex-direction:column; gap:7px; margin-top:10px}
+
+  /* ── 컨트롤 바 (스테이지 밖 68px — 다람쥐와 겹치지 않는다) ── */
+  #ctrl{width:360px; height:68px; margin-top:8px; display:flex; gap:10px;}
+  .btn{flex:1; display:flex; align-items:center; justify-content:center;
+    font-size:30px; line-height:1; color:var(--ink);
+    background:var(--deep); border:2.5px solid var(--ink); border-radius:16px;
+    cursor:pointer; touch-action:none; font-family:var(--body);}
+  .btn.down{background:var(--sage); color:var(--paper); transform:translateY(2px)}
+  .btn:focus-visible{outline:3px solid var(--red); outline-offset:2px}
+
+  /* ── 튜닝 패널 ── */
+  #panel{width:360px; max-width:100%; background:var(--deep); border:1.5px solid var(--line);
+    border-radius:14px; padding:14px 16px; font-size:13px;}
+  #panel h4{font-family:var(--disp); font-size:19px; margin:0 0 3px}
+  #panel p{margin:0 0 12px; color:var(--muted); font-size:12.5px; line-height:1.55}
+  .ctl{display:grid; grid-template-columns:112px 1fr; gap:4px 10px;
+       align-items:center; margin-bottom:11px}
+  .ctl label{font-size:12.5px}
+  .ctl input[type=range]{width:100%; accent-color:var(--sage)}
+  .ctl output{grid-column:2; font-family:var(--mono); font-size:11.5px; color:var(--muted);
+       font-variant-numeric:tabular-nums}
+  .chk{display:flex; align-items:center; gap:7px; margin-bottom:7px; font-size:12.5px}
+  .chk input{accent-color:var(--sage)}
+  #meters{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:12px;
+    border-top:1px solid var(--line);}
+  #meters span{font-family:var(--mono); font-size:11px; padding:3px 8px; border-radius:999px;
+    background:var(--paper); border:1px solid var(--line);}
+  .warnmsg{color:var(--red); font-weight:700}
+  footer{width:360px; max-width:100%; font-size:12px; color:var(--muted); line-height:1.6}
+  code{font-family:var(--mono); font-size:.92em; background:var(--deep); padding:1px 4px; border-radius:4px}
+</style>
+
+<div id="fit">
+  <div id="stage">
+    <div id="bg"></div>
+    <div id="laneHi"></div>
+    <div id="catch"></div>
+    <div id="items"></div>
+    <div id="squirrel"><img src="../assets/game/squirrel.png" alt="바구니를 든 다람쥐" class="rim2"></div>
+
+    <div id="hud">
+      <div class="row">
+        <div id="hp"></div>
+        <span class="chip" id="lv">Lv 1</span>
+        <span id="combo"></span>
+        <button id="btnPause" type="button" aria-label="일시정지"><i></i><i></i></button>
+        <span id="score">0</span>
+      </div>
+    </div>
+    <div id="banner"></div>
+
+    <div id="over" hidden>
+      <div class="box">
+        <h3>게임 오버</h3>
+        <div class="big" id="ovScore">0</div>
+        <div class="best" id="ovBest"></div>
+        <div class="acts">
+          <button class="big-btn" id="again">다시하기</button>
+          <button class="big-btn ghost" id="toTitle">처음 화면</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="scr-load">
+      <h2>도토리 숲 바구니</h2>
+      <p>그림을 불러오는 중…</p>
+      <div class="bar"><i id="loadBar"></i></div>
+    </div>
+
+    <div class="screen" id="scr-title" hidden>
+      <h2>도토리 숲 바구니</h2>
+      <img class="hero" src="../assets/game/squirrel.png" alt="바구니를 든 다람쥐">
+      <p>레시피에 적힌 <b>순서대로</b> 과일을 받으세요.</p>
+      <button class="big-btn" id="btnStart">시작하기</button>
+      <button class="big-btn ghost" id="btnTut">놀이법</button>
+      <span class="best" id="titleBest"></span>
+    </div>
+
+    <div class="screen" id="scr-tut" hidden>
+      <h2>놀이법</h2>
+      <div class="rule">
+        <span class="ic two"><img src="../assets/game/apple.png" alt=""><img src="../assets/game/banana.png" alt=""></span>
+        <span><b>순서대로 받기</b><span>아래 레시피의 <b>빨간 칸</b>이 지금 받을 과일입니다.
+          왼쪽부터 차례로 채웁니다.</span></span>
+      </div>
+      <div class="rule">
+        <span class="ic"><img src="../assets/game/squirrel.png" alt=""></span>
+        <span><b>좌우로 움직이기</b><span>화면 아래 버튼, 또는
+          <span class="keycap">←</span> <span class="keycap">→</span> 키.
+          바구니가 있는 줄에 떨어진 것만 받습니다.</span></span>
+      </div>
+      <div class="rule">
+        <span class="ic"><img src="../assets/game/grape.png" alt=""></span>
+        <span><b>순서가 아니면 깎여요</b><span>레시피에 있는 과일이라도 <b>차례가 아니면</b>
+          받으면 안 됩니다.</span></span>
+      </div>
+      <div class="rule">
+        <span class="ic two"><img src="../assets/authored/stone.svg" alt=""><img src="../assets/authored/twig.svg" alt=""></span>
+        <span><b>돌멩이와 나뭇가지는 피하기</b><span>먹을 수 없는 것들입니다.
+          받으면 도토리가 깎입니다.</span></span>
+      </div>
+      <div class="rule">
+        <span class="ic">⏳</span>
+        <span><b>시간 안에 채우기</b><span>레시피 위 막대가 남은 시간. 다 줄면 도토리가 깎이고
+          레시피가 새로 나옵니다.</span></span>
+      </div>
+      <div class="tutacts">
+        <button class="big-btn ghost" id="btnTutBack">돌아가기</button>
+        <button class="big-btn" id="btnTutStart">바로 시작</button>
+      </div>
+    </div>
+
+    <div class="screen" id="scr-pause" hidden>
+      <div class="card">
+        <h3>잠깐 멈춤</h3>
+        <button class="big-btn" id="btnResume">계속하기</button>
+        <button class="big-btn ghost" id="btnRestart">다시하기</button>
+        <button class="big-btn ghost" id="btnPauseTitle">처음 화면</button>
+      </div>
+    </div>
+
+    <div class="screen" id="scr-unlock" hidden>
+      <div class="card">
+        <div class="lvl" id="ulLevel">Lv 2</div>
+        <div class="grp" id="ulFruits" hidden><h3>새 과일이 나와요</h3><div class="row" id="ulFruitRow"></div></div>
+        <div class="grp warn" id="ulObs" hidden><h3>조심하세요</h3><div class="row" id="ulObsRow"></div></div>
+        <div class="hint">아무 곳이나 누르면 계속</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="recipebar">
+    <div id="timerBar"><i id="timerFill"></i></div>
+    <div id="queue" aria-label="레시피 — 왼쪽부터 순서대로 받는다"></div>
+  </div>
+
+  <div id="ctrl">
+    <button class="btn" id="bl" aria-label="왼쪽 레인으로 이동">◀</button>
+    <button class="btn" id="br" aria-label="오른쪽 레인으로 이동">▶</button>
+  </div>
+</div>
+
+<div id="panel">
+  <h4>튜닝</h4>
+  <p>미정으로 남아 있던 두 가지를 여기서 직접 만져보고 정하면 됩니다 —
+     수치는 <code>game/config/balance.ts</code>에서 그대로 읽어옵니다. 제한시간은 고정값이
+     아니라 «최소 소요 + 여유»로 <b>역산</b>되므로, 스폰이나 속도를 바꾸면 같이 움직입니다.
+     난이도는 <b>낙하 속도</b>가 담당합니다 — 화면에 몇 개가 더 뜨는지는 레인이 5개라
+     체감이 잘 안 바뀝니다. 계기판의 <b>회피여유</b>(낙하시간 − 끝에서 끝 이동시간)가
+     레벨업 체감을 만드는 값이고, Lv1 2.02초에서 Lv7 0.47초까지 줄어듭니다.
+     아직 미정인 건 <b>실패 시 진행도 리셋</b> 하나입니다.</p>
+  <div class="ctl"><label for="cd">이동 쿨다운</label>
+    <input type="range" id="cd" min="60" max="260" step="10" value="120"><output id="cdv">120ms</output></div>
+  <div class="ctl"><label for="sp">낙하 속도 배율</label>
+    <input type="range" id="sp" min="0.6" max="2.2" step="0.05" value="1"><output id="spv">레벨값</output></div>
+  <div class="ctl"><label for="sl">제한시간 여유</label>
+    <input type="range" id="sl" min="15" max="45" step="1" value="30"><output id="slv">30s</output></div>
+  <div class="ctl"><label for="pl">레벨당 레시피</label>
+    <input type="range" id="pl" min="3" max="20" step="1" value="5"><output id="plv">3개</output></div>
+  <div class="ctl"><label for="lub">레벨업 조건</label>
+    <select id="lub" style="font-family:var(--body);font-size:12.5px;padding:5px 8px;
+      border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)">
+      <option value="recipes">레시피 N개 완료 (진행 기반)</option>
+      <option value="score">점수 임계값 도달 (점수 기반)</option>
+    </select><output id="lubv"></output></div>
+  <div class="chk"><input type="checkbox" id="resetfail"><label for="resetfail">실패하면 이번 레벨을 처음부터 (진행도 리셋)</label></div>
+  <div class="chk"><input type="checkbox" id="interp"><label for="interp">위치 보간 켜기 (불변식 위반 — 감각 비교용)</label></div>
+  <div class="chk"><input type="checkbox" id="showline"><label for="showline">catchLineY 500 표시</label></div>
+  <div id="meters">
+    <span>FPS <b id="mFps">–</b></span>
+    <span>화면 내 <b id="mLive">0</b></span>
+    <span>동시통과 <b id="mCross">–</b>/3</span>
+    <span>간격 <b id="mInt">–</b>s</span>
+    <span>낙하 <b id="mFall">–</b>s</span>
+    <span>회피여유 <b id="mDodge">–</b>s</span>
+    <span>정답률 <b id="mRatio">–</b></span>
+    <span>방해물 <b id="mObs">–</b></span>
+  </div>
+</div>
+
+<footer>
+  조작 — 화면 버튼, 또는 <code>←</code> <code>→</code> / <code>A</code> <code>D</code>.
+  키는 <code>event.code</code>로 읽어 한글 입력에서도 동작하고, OS 키 리피트는 무시하며,
+  <code>blur</code>·탭 전환 시 눌림 상태를 리셋합니다(웹뷰 대응).
+  규칙은 <code>docs/PLAN.md</code> rev.5, 수치는 <code>game/config/balance.ts</code>.
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ══ game/config/balance.ts 미러 ══════════════════════════════════
+   프로토타입은 TS를 못 읽으므로 값을 복사해 둔다. balance.ts를 고치면
+   여기도 같이 고쳐야 한다 — Next 앱으로 옮길 때 import로 대체된다. */
+var BAL={
+  lane:{count:5, logicalWidth:360, logicalHeight:640, catchLineY:500},
+  movement:{snapTiltMs:90, moveCooldownMs:120, holdInitialDelayMs:250, holdRepeatMs:120},
+  hp:{max:3, invulnerableSec:0.8, healOnLevelUp:0, missPenaltyHp:0, missResetsCombo:true},
+  scoring:{correctCatch:10, recipeCompletePerItem:50, comboStep:3, comboIncrement:0.5, comboMax:2.5},
+  recipe:{limitSec:30, warnRatio:0.2, warnSecondsMax:5.0,
+          expirePenaltyHp:1, noRepeatWindow:1},
+  spawner:{simultaneousCrossLimit:3, crossWindowSec:0.4, spawnJitterRatio:0.35,
+           sameLaneMinGapPx:175, starvationSec:4.0, reachabilityCheck:true,
+           baseFallSpeedPxPerSec:200},
+  levelUp:{recipesPerLevel:5, bannerDurationSec:1.5},
+  levels:[
+    {level:1,recipeLength:3,correctSpawnRatio:0.70,spawnIntervalSec:0.89,maxOnScreen:6,obstacleDropRate:0.00,fallSpeedMultiplier:1.00},
+    {level:2,recipeLength:3,correctSpawnRatio:0.64,spawnIntervalSec:0.73,maxOnScreen:6,obstacleDropRate:0.00,fallSpeedMultiplier:1.22},
+    {level:3,recipeLength:4,correctSpawnRatio:0.58,spawnIntervalSec:0.61,maxOnScreen:6,obstacleDropRate:0.06,fallSpeedMultiplier:1.46},
+    {level:4,recipeLength:4,correctSpawnRatio:0.53,spawnIntervalSec:0.52,maxOnScreen:7,obstacleDropRate:0.09,fallSpeedMultiplier:1.72},
+    {level:5,recipeLength:5,correctSpawnRatio:0.49,spawnIntervalSec:0.45,maxOnScreen:7,obstacleDropRate:0.12,fallSpeedMultiplier:2.00},
+    {level:6,recipeLength:5,correctSpawnRatio:0.45,spawnIntervalSec:0.39,maxOnScreen:7,obstacleDropRate:0.15,fallSpeedMultiplier:2.30},
+    {level:7,recipeLength:6,correctSpawnRatio:0.42,spawnIntervalSec:0.34,maxOnScreen:8,obstacleDropRate:0.18,fallSpeedMultiplier:2.63}
+  ],
+  endless:{fromLevel:8, recipeLength:6, maxOnScreen:9,
+    correctSpawnRatioDeltaPerLevel:-0.01, correctSpawnRatioMin:0.30,
+    spawnIntervalDeltaPerLevel:-0.006, spawnIntervalMinSec:0.27,
+    obstacleDropRateDeltaPerLevel:0.01, obstacleDropRateMax:0.26,
+    fallSpeedDeltaPerLevel:0.10, fallSpeedMax:3.85}
+};
+
+/* ══ 에셋 ══════════════════════════════════════════════════════
+   아트가 있는 것만 넣는다. items.ts에는 과일 16종이 있지만 Lv8 이후 해금분은
+   아직 그림이 없어 프로토타입 풀은 8종에서 멈춘다. */
+var ITEMS=[
+  {id:'apple',      ko:'사과',     obstacle:false, unlock:1, src:'../assets/game/apple.png'},
+  {id:'tangerine',  ko:'귤',       obstacle:false, unlock:1, src:'../assets/game/tangerine.png'},
+  {id:'banana',     ko:'바나나',   obstacle:false, unlock:1, src:'../assets/game/banana.png'},
+  {id:'strawberry', ko:'딸기',     obstacle:false, unlock:1, src:'../assets/game/strawberry.png'},
+  {id:'grape',      ko:'포도',     obstacle:false, unlock:2, src:'../assets/game/grape.png'},
+  {id:'watermelon', ko:'수박',     obstacle:false, unlock:3, src:'../assets/authored/watermelon.svg'},
+  {id:'pear',       ko:'배',       obstacle:false, unlock:4, src:'../assets/authored/pear.svg'},
+  {id:'cherry',     ko:'체리',     obstacle:false, unlock:5, src:'../assets/authored/cherry.svg'},
+  {id:'stone',      ko:'돌멩이',   obstacle:true,  unlock:3, src:'../assets/authored/stone.svg'},
+  {id:'twig',       ko:'나뭇가지', obstacle:true,  unlock:3, src:'../assets/authored/twig.svg'}
+];
+var ACTIVE_FRUIT_CAP=8;
+function unlockedFruits(lv){
+  return ITEMS.filter(function(i){ return !i.obstacle && i.unlock<=lv; });
+}
+function activeFruits(lv){
+  var p=unlockedFruits(lv).slice().sort(function(a,b){return a.unlock-b.unlock;});
+  return p.slice(Math.max(0,p.length-ACTIVE_FRUIT_CAP));
+}
+function activeObstacles(lv){
+  return ITEMS.filter(function(i){ return i.obstacle && i.unlock<=lv; });
+}
+
+/* ══ 레벨 튜닝 ═════════════════════════════════════════════════ */
+function tuningForLevel(level){
+  var lv=Math.max(1,Math.floor(level));
+  var tbl=BAL.levels, last=tbl[tbl.length-1];
+  for(var i=0;i<tbl.length;i++) if(tbl[i].level===lv) return tbl[i];
+  if(lv<tbl[0].level) return tbl[0];
+  var e=BAL.endless, n=lv-last.level;
+  return {
+    level:lv,
+    recipeLength:e.recipeLength,
+    maxOnScreen:e.maxOnScreen,
+    correctSpawnRatio:Math.max(e.correctSpawnRatioMin, last.correctSpawnRatio+e.correctSpawnRatioDeltaPerLevel*n),
+    spawnIntervalSec:Math.max(e.spawnIntervalMinSec, last.spawnIntervalSec+e.spawnIntervalDeltaPerLevel*n),
+    obstacleDropRate:Math.min(e.obstacleDropRateMax, last.obstacleDropRate+e.obstacleDropRateDeltaPerLevel*n),
+    fallSpeedMultiplier:Math.min(e.fallSpeedMax, last.fallSpeedMultiplier+e.fallSpeedDeltaPerLevel*n)
+  };
+}
+/** 레시피 하나를 끝내는 최소 시간 — 정답이 평균 간격으로 나온다고 볼 때 */
+function recipeMinCompletionSec(lv){
+  var t=tuningForLevel(lv);
+  var mult = CFG.speedOverride>0 ? CFG.speedOverride : t.fallSpeedMultiplier;  // 슬라이더로 속도를 덮으면
+  var fall=BAL.lane.catchLineY/(BAL.spawner.baseFallSpeedPxPerSec*mult);        // 제한시간도 따라와야 한다
+  return t.recipeLength*correctGapSec(lv) + fall;
+}
+/** 정답 과일 하나가 나오는 평균 간격(초) */
+function correctGapSec(lv){
+  var t=tuningForLevel(lv);
+  return t.spawnIntervalSec/t.correctSpawnRatio;
+}
+/** 제한시간은 고정이다 — 스폰이 몰려 '정답이 안 나와서 지는' 판을 없애기 위해.
+    난이도는 타이머가 아니라 낙하 속도가 담당한다. */
+function recipeTimeLimitSec(lv){ return CFG.limit; }
+
+/* ══ 좌표 ══════════════════════════════════════════════════════ */
+var LANES=BAL.lane.count, LANE_W=BAL.lane.logicalWidth/LANES;
+var SQ_W=82, SQ_AXIS=0.359;                 // 몸 축이 스프라이트 폭의 35.9% 지점에 있다
+var SQ_OFF=(0.5-SQ_AXIS)*SQ_W;              // 박스 중심 → 몸 축 보정 (약 11.5px)
+var ITEM=48, SPAWN_Y=-60, DESPAWN_Y=BAL.lane.logicalHeight+60;
+var LINE=BAL.lane.catchLineY-ITEM/2;      // 아이템 중심이 catchLineY를 지나는 시점
+var FALL_DIST=LINE-SPAWN_Y;
+function laneX(i){ return i*LANE_W+(LANE_W-ITEM)/2; }
+
+/* ══ DOM ═══════════════════════════════════════════════════════ */
+var $=function(id){ return document.getElementById(id); };
+var stage=$('stage'), layer=$('items'), sqEl=$('squirrel'), laneHi=$('laneHi');
+var timerBar=$('timerBar'), timerFill=$('timerFill'), banner=$('banner');
+
+/* ══ 상태 ══════════════════════════════════════════════════════ */
+/* ══ 화면 상태 ══════════════════════════════════════════════════
+   'loading' → 'title' ⇄ 'tutorial' → 'playing' ⇄ 'levelup' → 'over'
+   step()은 'playing'일 때만 게임을 전진시킨다. 해금 카드가 뜨는 동안
+   과일이 계속 떨어지면 읽을 수가 없어서, 잠시 멈추는 쪽을 택했다. */
+var PHASE='loading';
+var SCREENS={loading:'scr-load', title:'scr-title', tutorial:'scr-tut',
+             levelup:'scr-unlock', paused:'scr-pause'};
+function setPhase(next, now){
+  PHASE=next;
+  for(var k in SCREENS) $(SCREENS[k]).hidden = (k!==next);
+  if(next==='playing'){ last=performance.now(); acc=0; held=0; }   // 멈춘 동안 쌓인 dt를 버린다
+}
+
+var CFG={cooldown:BAL.movement.moveCooldownMs, speedOverride:0, interp:false,
+         perLevel:BAL.levelUp.recipesPerLevel, resetOnFail:false,
+         limit:BAL.recipe.limitSec, levelUpBy:'recipes'};
+var S=null, live=[], pool=[], crossLog=[];
+
+function best(){
+  try{ return parseInt(localStorage.getItem('dotori.best')||'0',10)||0; }
+  catch(e){ return 0; }                       // 시크릿 모드 등에서 throw
+}
+function saveBest(v){
+  try{ localStorage.setItem('dotori.best',String(v)); }catch(e){ /* 저장 불가 — 무시 */ }
+}
+
+function reset(){
+  for(var i=live.length-1;i>=0;i--) retire(i);
+  crossLog.length=0;
+  var now=performance.now();
+  S={lane:2, hp:BAL.hp.max, score:0, combo:0, level:1, recipesDone:0,
+     recipe:[], idx:0, over:false, spawnAt:0.6, lastMove:-1e9, buffered:0,
+     recipesAtLevelStart:0, scoreAtLevelStart:0,
+     tilt:0, visX:laneX(2), timeLeft:0, timeMax:1, invUntil:0, bannerUntil:0,
+     lastCorrectSpawn:now, spawned:0, spawnedCorrect:0, spawnedObstacle:0};
+  S.unlockUntil=0;
+  $('over').hidden=true;
+  newRecipe(now); drawHp(); drawScore(); drawLevel();   // now=0이면 첫 스폰이 기아 방지로 강제 정답이 된다
+}
+
+function pause(){
+  if(PHASE!=='playing'||!S||S.over) return;
+  setPhase('paused');
+}
+function resume(){
+  if(PHASE!=='paused') return;
+  setPhase('playing', performance.now());
+}
+
+function startGame(){
+  reset();
+  setPhase('playing', performance.now());
+}
+
+/* ══ 스프라이트 ════════════════════════════════════════════════ */
+function imgFor(def,size){
+  var im=new Image();
+  im.src=def.src; im.alt=def.ko; im.className='rim';
+  if(size){ im.style.width=size+'px'; im.style.height=size+'px'; }
+  return im;
+}
+
+/* ══ 해금 ══════════════════════════════════════════════════════ */
+function newlyUnlocked(level){
+  return ITEMS.filter(function(i){ return i.unlock===level; });
+}
+function showUnlock(list, level, now){
+  $('ulLevel').textContent='Lv '+level;
+  var fruits=list.filter(function(i){ return !i.obstacle; });
+  var obs=list.filter(function(i){ return i.obstacle; });
+  function fill(rowId, grpId, arr){
+    var row=$(rowId); row.textContent='';
+    arr.forEach(function(d){
+      var w=document.createElement('span'); w.className='it';
+      w.appendChild(imgFor(d,42));
+      var t=document.createElement('span'); t.textContent=d.ko; w.appendChild(t);
+      row.appendChild(w);
+    });
+    $(grpId).hidden = arr.length===0;
+  }
+  fill('ulFruitRow','ulFruits',fruits);
+  fill('ulObsRow','ulObs',obs);
+  setPhase('levelup', now);
+  S.unlockUntil=performance.now()+2200;
+}
+
+/* ══ 레시피 ════════════════════════════════════════════════════ */
+function newRecipe(now){
+  var t=tuningForLevel(S.level), pool2=activeFruits(S.level);
+  S.recipe=[]; S.idx=0;
+  for(var i=0;i<t.recipeLength;i++){
+    var f, guard=0;
+    do{ f=pool2[(Math.random()*pool2.length)|0]; guard++; }
+    while(guard<40 && BAL.recipe.noRepeatWindow>0 && i>0 && f.id===S.recipe[i-1].id);
+    S.recipe.push(f);
+  }
+  S.timeMax=recipeTimeLimitSec(S.level);
+  S.timeLeft=S.timeMax;
+  S.lastCorrectSpawn=now;
+  drawQueue();
+}
+function drawQueue(){
+  var q=$('queue'); q.textContent='';
+  S.recipe.forEach(function(f,i){
+    if(i){ var a=document.createElement('span'); a.className='arw'; a.textContent='›'; q.appendChild(a); }
+    var w=document.createElement('div');
+    w.className='qi'+(i===S.idx?' now':(i<S.idx?' done':''));
+    w.title=f.ko; w.setAttribute('aria-label',f.ko+(i===S.idx?' (지금 받을 것)':''));
+    w.appendChild(imgFor(f,26));
+    q.appendChild(w);
+  });
+}
+function drawHp(){
+  var h=$('hp'); h.textContent='';
+  for(var i=0;i<BAL.hp.max;i++){
+    var d=document.createElement('i');
+    if(i>=S.hp) d.className='off';
+    h.appendChild(d);
+  }
+  h.setAttribute('aria-label','HP '+S.hp+' / '+BAL.hp.max);
+}
+function comboMult(){
+  var s=BAL.scoring;
+  return Math.min(s.comboMax, 1+Math.floor(S.combo/s.comboStep)*s.comboIncrement);
+}
+function drawScore(){
+  $('score').textContent=S.score.toLocaleString();
+  var m=comboMult();
+  $('combo').textContent = m>1 ? ('×'+m.toFixed(1)) : '';
+}
+function drawLevel(){ $('lv').textContent='Lv '+S.level; }
+
+/* ══ 스포너 ════════════════════════════════════════════════════
+   rulePriority: crossLimit → laneGap → starvation → reachability
+   crossLimit는 "언제"를 막고(타이밍), laneGap·reachability는 "어디"를 막는다(레인). */
+function fallSpeed(){
+  var t=tuningForLevel(S.level);
+  var mult = CFG.speedOverride>0 ? CFG.speedOverride : t.fallSpeedMultiplier;
+  return BAL.spawner.baseFallSpeedPxPerSec*mult;
+}
+function crossLimitOk(now,v){
+  var crossAt=now+FALL_DIST/v*1000, w=BAL.spawner.crossWindowSec*1000, n=0;
+  for(var i=0;i<live.length;i++) if(Math.abs(live[i].crossAt-crossAt)<=w) n++;
+  return n < BAL.spawner.simultaneousCrossLimit;
+}
+function laneGapOk(lane){
+  for(var i=0;i<live.length;i++)
+    if(live[i].lane===lane && live[i].y-SPAWN_Y < BAL.spawner.sameLaneMinGapPx) return false;
+  return true;
+}
+function reachable(lane,v){
+  if(!BAL.spawner.reachabilityCheck) return true;
+  var sec=FALL_DIST/v;
+  var moves=Math.floor(sec*1000/CFG.cooldown);
+  return Math.abs(lane-S.lane) <= moves;
+}
+function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
+
+function spawn(now){
+  var t=tuningForLevel(S.level);
+  if(live.length>=t.maxOnScreen) return false;
+  var v=fallSpeed();
+  if(!crossLimitOk(now,v)) return false;                 // ① 동시통과 상한
+
+  var target=S.recipe[S.idx];
+  var starving=(now-S.lastCorrectSpawn)/1000 >= BAL.spawner.starvationSec;
+  var def, r=Math.random();
+  if(starving) def=target;                               // ③ 기아 방지
+  else if(r < t.obstacleDropRate && activeObstacles(S.level).length) def=pick(activeObstacles(S.level));
+  else if(r < t.obstacleDropRate + t.correctSpawnRatio) def=target;
+  else{
+    var others=activeFruits(S.level).filter(function(f){ return f.id!==target.id; });
+    def = others.length ? pick(others) : target;
+  }
+  var isCorrect = (def.id===target.id && !def.obstacle);
+
+  // ② 같은 레인 최소 간격 + ④ 도달 가능성(정답에만 강제)
+  var cand=[];
+  for(var i=0;i<LANES;i++){
+    if(!laneGapOk(i)) continue;
+    if(isCorrect && !reachable(i,v)) continue;
+    cand.push(i);
+  }
+  if(!cand.length && isCorrect){                         // 도달 가능 레인이 없으면 간격만 본다
+    for(var j=0;j<LANES;j++) if(laneGapOk(j)) cand.push(j);
+  }
+  if(!cand.length) return false;
+  var lane=pick(cand);
+
+  var o=pool.pop();
+  if(!o){
+    o={el:document.createElement('div'), img:null, cur:null,
+       lane:0, def:null, y:0, prevY:0, crossAt:0};
+    o.el.className='drop';
+    layer.appendChild(o.el);
+  }
+  if(o.cur!==def.id){
+    o.el.textContent=''; o.img=imgFor(def,ITEM); o.el.appendChild(o.img); o.cur=def.id;
+  }
+  o.def=def; o.lane=lane; o.y=SPAWN_Y; o.prevY=SPAWN_Y;
+  o.crossAt=now+FALL_DIST/v*1000;
+  o.el.style.display='block';
+  o.el.style.transform='translate3d('+laneX(lane)+'px,'+SPAWN_Y+'px,0)';
+  live.push(o);
+
+  S.spawned++;
+  if(isCorrect){ S.spawnedCorrect++; S.lastCorrectSpawn=now; }
+  if(def.obstacle) S.spawnedObstacle++;
+  return true;
+}
+function retire(i){
+  var o=live[i];
+  o.el.style.display='none';
+  live.splice(i,1); pool.push(o);
+}
+
+/* ══ 판정 ══════════════════════════════════════════════════════ */
+function damage(now,amount){
+  if(now < S.invUntil) return;                           // 무적 중 — 데미지만 무효
+  S.hp-=amount; S.combo=0; S.invUntil=now+BAL.hp.invulnerableSec*1000;
+  drawHp(); drawScore();
+  if(stage.animate) stage.animate(
+    [{transform:'translateX(0)'},{transform:'translateX(-6px)'},
+     {transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:170});
+  if(S.hp<=0) gameOver();
+}
+function caught(o,now){
+  var target=S.recipe[S.idx];
+  if(!o.def.obstacle && o.def.id===target.id){
+    S.combo++;
+    S.score+=Math.round(BAL.scoring.correctCatch*comboMult());
+    S.idx++;
+    if(S.idx>=S.recipe.length){
+      S.score+=BAL.scoring.recipeCompletePerItem*S.recipe.length;
+      S.recipesDone++;
+      checkLevelUp(now);   // ★ 레벨이 먼저 올라가야 새 레시피가 새 레벨 기준(길이·제한시간)으로 나온다
+      newRecipe(now);
+    } else drawQueue();
+    drawScore();
+  }else{
+    damage(now,1);
+  }
+}
+/**
+ * 이번 레벨을 벗어나는 데 필요한 점수 증가분.
+ * 콤보가 없을 때 '레시피 perLevel개'와 정확히 같아지도록 맞췄다 —
+ * 그래야 두 정책을 같은 조건에서 비교할 수 있다. 콤보를 유지하면 더 빨리 오른다.
+ */
+function levelUpScoreTarget(lv){
+  var t=tuningForLevel(lv), sc=BAL.scoring;
+  return CFG.perLevel*(sc.correctCatch+sc.recipeCompletePerItem)*t.recipeLength;
+}
+function checkLevelUp(now){
+  if(CFG.levelUpBy==='score'){
+    if(S.score-S.scoreAtLevelStart >= levelUpScoreTarget(S.level)) levelUp(now);
+  }else{
+    if(S.recipesDone-S.recipesAtLevelStart >= CFG.perLevel) levelUp(now);
+  }
+}
+function levelUp(now){
+  S.level++;
+  S.recipesAtLevelStart=S.recipesDone; S.scoreAtLevelStart=S.score;
+  if(BAL.hp.healOnLevelUp>0) S.hp=Math.min(BAL.hp.max,S.hp+BAL.hp.healOnLevelUp);
+  drawLevel(); drawHp();
+  var nu=newlyUnlocked(S.level);
+  if(nu.length){ showUnlock(nu, S.level, now); return; }      // 해금이 있으면 멈추고 보여준다
+  // 문구는 이번 레벨에서 실제로 바뀐 것을 말한다 — 매번 같은 말이면 읽지 않게 된다
+  var prev=tuningForLevel(S.level-1), cur=tuningForLevel(S.level), msg;
+  if(cur.recipeLength>prev.recipeLength) msg='레시피가 '+cur.recipeLength+'개로';
+  else if(cur.obstacleDropRate>prev.obstacleDropRate) msg='방해물이 늘어나요';
+  else msg='조금 더 빨라져요';
+  banner.innerHTML='<span class="wrap2"><b>Lv '+S.level+'</b><em>'+msg+'</em></span>';
+  S.bannerUntil=now+BAL.levelUp.bannerDurationSec*1000;
+}
+function expire(now){
+  if(CFG.resetOnFail){                                   // 실패하면 이번 레벨을 처음부터
+    S.recipesAtLevelStart=S.recipesDone;
+    S.scoreAtLevelStart=S.score;
+  }
+  if(BAL.recipe.expirePenaltyHp>0){
+    S.hp-=BAL.recipe.expirePenaltyHp; S.combo=0;
+    S.invUntil=now+BAL.hp.invulnerableSec*1000;
+    drawHp(); drawScore();
+    if(S.hp<=0){ gameOver(); return; }
+  }
+  newRecipe(now);
+}
+function gameOver(){
+  S.over=true;
+  var b=best();
+  if(S.score>b){ b=S.score; saveBest(b); }
+  $('ovScore').textContent=S.score.toLocaleString();
+  $('ovBest').textContent='최고 '+b.toLocaleString();
+  $('over').hidden=false;
+  $('again').focus();
+}
+
+/* ══ 입력 — 탭·홀드·키보드가 같은 게이트를 통과한다 ═════════════ */
+var held=0, repeatAt=0;
+function tryMove(dir,now){
+  if(!S||S.over||PHASE!=='playing') return;
+  if(now-S.lastMove < CFG.cooldown){ S.buffered=dir; return; }
+  var nl=Math.max(0,Math.min(LANES-1,S.lane+dir));
+  if(nl!==S.lane){ S.lane=nl; S.tilt=dir; }
+  S.lastMove=now; S.buffered=0;
+}
+function bindBtn(el,dir){
+  el.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    if(el.setPointerCapture) try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    el.classList.add('down');
+    held=dir; repeatAt=performance.now()+BAL.movement.holdInitialDelayMs;
+    tryMove(dir,performance.now());
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(t){
+    el.addEventListener(t,function(){ el.classList.remove('down'); if(held===dir) held=0; });
+  });
+}
+bindBtn($('bl'),-1); bindBtn($('br'),1);
+
+var KEYS={ArrowLeft:-1,KeyA:-1,ArrowRight:1,KeyD:1};
+window.addEventListener('keydown',function(e){
+  if(e.repeat) return;                                   // OS 키 리피트 무시
+  var d=KEYS[e.code];                                    // event.key면 한글 입력에서 깨진다
+  if(!d) return;
+  e.preventDefault();
+  held=d; repeatAt=performance.now()+BAL.movement.holdInitialDelayMs;
+  tryMove(d,performance.now());
+},{passive:false});
+window.addEventListener('keyup',function(e){ if(KEYS[e.code]) held=0; });
+window.addEventListener('blur',function(){ held=0; });
+document.addEventListener('visibilitychange',function(){
+  held=0;
+  if(document.hidden) pause();
+});
+window.addEventListener('pagehide',function(){ held=0; pause(); });
+$('again').addEventListener('click',startGame);
+$('toTitle').addEventListener('click',function(){
+  $('over').hidden=true; setPhase('title'); $('titleBest').textContent='최고 '+best().toLocaleString();
+});
+$('btnPause').addEventListener('click',pause);
+$('btnResume').addEventListener('click',resume);
+$('btnRestart').addEventListener('click',startGame);
+$('btnPauseTitle').addEventListener('click',function(){
+  setPhase('title'); $('titleBest').textContent='최고 '+best().toLocaleString();
+});
+$('btnStart').addEventListener('click',startGame);
+$('btnTutStart').addEventListener('click',startGame);
+$('btnTut').addEventListener('click',function(){ setPhase('tutorial'); });
+$('btnTutBack').addEventListener('click',function(){ setPhase('title'); });
+$('scr-unlock').addEventListener('pointerdown',function(){
+  if(PHASE==='levelup') setPhase('playing', performance.now());
+});
+window.addEventListener('keydown',function(e){
+  if(e.code==='Escape'||e.code==='KeyP'){        // 일시정지 토글
+    e.preventDefault();
+    if(PHASE==='playing') pause(); else if(PHASE==='paused') resume();
+    return;
+  }
+  if(e.code!=='Enter' && e.code!=='Space') return;
+  if(PHASE==='paused'){ e.preventDefault(); resume(); }
+  else if(PHASE==='title'||PHASE==='tutorial'){ e.preventDefault(); startGame(); }
+  else if(PHASE==='levelup'){ e.preventDefault(); setPhase('playing', performance.now()); }
+  else if(PHASE==='playing' && S.over){ e.preventDefault(); startGame(); }
+},{passive:false});
+
+/* ══ 튜닝 UI ═══════════════════════════════════════════════════ */
+$('cd').addEventListener('input',function(){
+  CFG.cooldown=parseInt(this.value,10); $('cdv').textContent=CFG.cooldown+'ms';
+});
+$('sp').addEventListener('input',function(){
+  CFG.speedOverride=parseFloat(this.value);
+  $('spv').textContent='×'+CFG.speedOverride.toFixed(2);
+  showSlack();                                        // 속도가 바뀌면 제한시간도 바뀐다
+});
+function showSlack(){
+  $('slv').textContent=CFG.limit+'s · Lv1 최소소요 '+recipeMinCompletionSec(1).toFixed(1)
+    +'s (정답 '+((CFG.limit-recipeMinCompletionSec(1))/correctGapSec(1)).toFixed(0)+'회 놓쳐도 됨)';
+}
+$('sl').addEventListener('input',function(){ CFG.limit=parseFloat(this.value); showSlack(); });
+$('pl').addEventListener('input',function(){
+  CFG.perLevel=parseInt(this.value,10);
+  $('plv').textContent=CFG.perLevel+'개 · Lv1 약 '+Math.round(recipeMinCompletionSec(1)*CFG.perLevel)+'초';
+showSlack();
+});
+$('lub').addEventListener('change',function(){ CFG.levelUpBy=this.value; showLevelUp(); });
+function showLevelUp(){
+  $('lubv').textContent = CFG.levelUpBy==='score'
+    ? 'Lv1 → Lv2 에 '+levelUpScoreTarget(1).toLocaleString()+'점 (콤보 없을 때 레시피 '+CFG.perLevel+'개와 동일)'
+    : '레시피 '+CFG.perLevel+'개마다. 점수와 무관하게 일정한 속도';
+}
+$('resetfail').addEventListener('change',function(){ CFG.resetOnFail=this.checked; });
+$('interp').addEventListener('change',function(){ CFG.interp=this.checked; });
+$('showline').addEventListener('change',function(){
+  var c=$('catch');
+  c.style.display=this.checked?'block':'none';
+  c.style.top=BAL.lane.catchLineY+'px';
+});
+
+/* ══ 화면 맞춤 ═════════════════════════════════════════════════ */
+function fit(){
+  var avail=window.innerHeight-260;                      // 패널·푸터 공간
+  var s=Math.min(1, avail/(BAL.lane.logicalHeight+76+62), (window.innerWidth-24)/360);
+  $('fit').style.transform='scale('+Math.max(0.5,s).toFixed(3)+')';
+  $('fit').style.height=((BAL.lane.logicalHeight+76+62)*Math.max(0.5,s))+'px';
+}
+window.addEventListener('resize',fit);
+
+/* ══ 프리로드 — 첫 과일이 팝인으로 나타나지 않게 ══════════════ */
+function preload(done){
+  var urls=ITEMS.map(function(i){ return i.src; })
+    .concat(['../assets/game/squirrel.png','../assets/game/bg.jpg',
+             '../assets/game/bg-forest-full.jpg']);
+  var loaded=0, bar=$('loadBar');
+  function tick(){
+    loaded++;
+    bar.style.width=Math.round(100*loaded/urls.length)+'%';
+    if(loaded>=urls.length) setTimeout(done,180);
+  }
+  urls.forEach(function(u){
+    var im=new Image();
+    im.onload=tick; im.onerror=tick;        // 실패해도 진행을 막지 않는다
+    im.src=u;
+  });
+}
+
+/* ══ 루프 ══════════════════════════════════════════════════════ */
+var STEP=1/60, last=performance.now(), acc=0, fpsT=0, fpsN=0;
+function step(dt,now){
+  if(PHASE==='levelup'){                       // 해금 카드 — 자동 해제
+    if(now>=S.unlockUntil) setPhase('playing', now);
+    return;
+  }
+  if(PHASE!=='playing') return;    // 'paused'·'title' 등에서는 판이 멈춘다
+
+  // 입력 게이트
+  if(held && now>=repeatAt){ tryMove(held,now); repeatAt=now+BAL.movement.holdRepeatMs; }
+  else if(!held && S.buffered && now-S.lastMove>=CFG.cooldown) tryMove(S.buffered,now);
+
+  // ★ 불변식: 시각 위치 === 논리 위치. 보간은 감각 비교용 옵션일 뿐이다.
+  var tx=laneX(S.lane);
+  if(CFG.interp) S.visX += (tx-S.visX)*Math.min(1,dt*9);
+  else S.visX=tx;
+  var rot=S.tilt*11;
+  S.tilt *= Math.max(0,1-dt*(1000/BAL.movement.snapTiltMs)/10);
+  var blink = (now<S.invUntil && Math.floor(now/90)%2) ? 0.35 : 1;
+  sqEl.style.opacity=blink;
+  sqEl.style.transform='translate3d('+(S.visX-(SQ_W-ITEM)/2+SQ_OFF)+'px,0,0) rotate('+rot.toFixed(2)+'deg)';
+  laneHi.style.transform='translate3d('+(S.lane*LANE_W)+'px,0,0)';
+
+  if(now>=S.bannerUntil) banner.innerHTML='';
+  if(S.over) return;
+
+  // 레시피 타이머
+  S.timeLeft-=dt;
+  var frac=Math.max(0,S.timeLeft/S.timeMax);
+  timerFill.style.transform='scaleX('+frac.toFixed(4)+')';
+  timerBar.classList.toggle('warn', frac<=BAL.recipe.warnRatio || S.timeLeft<=BAL.recipe.warnSecondsMax);
+  if(S.timeLeft<=0){ expire(now); return; }
+
+  // 스폰
+  var t=tuningForLevel(S.level);
+  S.spawnAt-=dt;
+  if(S.spawnAt<=0){
+    var ok=spawn(now);
+    var j=BAL.spawner.spawnJitterRatio;
+    S.spawnAt = ok ? t.spawnIntervalSec*(1+(Math.random()*2-1)*j) : 0.08;  // 막히면 짧게 재시도
+  }
+
+  // 낙하 + 라인 통과 판정 (1회만)
+  var v=fallSpeed();
+  for(var i=live.length-1;i>=0;i--){
+    var o=live[i];
+    o.prevY=o.y; o.y+=v*dt;
+    o.el.style.transform='translate3d('+laneX(o.lane)+'px,'+o.y.toFixed(1)+'px,0)';
+    if(o.prevY<=LINE && o.y>LINE){
+      crossLog.push(now);
+      if(o.lane===S.lane){ caught(o,now); retire(i); continue; }
+      if(!o.def.obstacle && o.def.id===S.recipe[S.idx].id){   // 정답을 놓쳤다
+        if(BAL.hp.missPenaltyHp>0) damage(now,BAL.hp.missPenaltyHp);
+        else if(BAL.hp.missResetsCombo && S.combo){ S.combo=0; drawScore(); }
+      }
+    }
+    if(o.y>DESPAWN_Y) retire(i);
+  }
+}
+function meters(now){
+  $('mFps').textContent=Math.round(fpsN*1000/(now-fpsT));
+  $('mLive').textContent=live.length;
+  while(crossLog.length && now-crossLog[0]>4000) crossLog.shift();
+  var mx=0, w=BAL.spawner.crossWindowSec*1000;
+  for(var i=0;i<crossLog.length;i++){
+    var c=0;
+    for(var j=0;j<crossLog.length;j++) if(Math.abs(crossLog[j]-crossLog[i])<=w) c++;
+    if(c>mx) mx=c;
+  }
+  var el=$('mCross');
+  el.textContent=(mx||'–')+'/'+BAL.spawner.simultaneousCrossLimit;
+  el.parentNode.classList.toggle('warnmsg', mx>BAL.spawner.simultaneousCrossLimit);
+  var t=tuningForLevel(S.level);
+  $('mInt').textContent=t.spawnIntervalSec.toFixed(2);
+  var mult = CFG.speedOverride>0 ? CFG.speedOverride : t.fallSpeedMultiplier;
+  var fall = BAL.lane.catchLineY/(BAL.spawner.baseFallSpeedPxPerSec*mult);
+  $('mFall').textContent=fall.toFixed(2);
+  $('mDodge').textContent=(fall-4*CFG.cooldown/1000).toFixed(2);   // 끝에서 끝까지 피하고 남는 시간
+  $('mRatio').textContent=S.spawned?Math.round(100*S.spawnedCorrect/S.spawned)+'%':'–';
+  $('mObs').textContent=S.spawned?Math.round(100*S.spawnedObstacle/S.spawned)+'%':'–';
+}
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt=Math.min((now-last)/1000, 1/30); last=now;      // 탭 복귀 시 점프 방지
+  acc+=dt;
+  var guard=0;
+  while(acc>=STEP && guard++<5){ step(STEP,now); acc-=STEP; }
+  fpsN++;
+  if(now-fpsT>500){ meters(now); fpsT=now; fpsN=0; }
+}
+
+reset(); fit(); showSlack(); showLevelUp();
+if(/[?&]dbg\b/.test(location.search)){
+  window.__dbg={
+    jump:function(lv){ S.level=lv-1; levelUp(performance.now()); },   // 해금 카드 확인용
+    state:function(){ return {phase:PHASE, level:S.level, hp:S.hp, score:S.score,
+      recipe:S.recipe.map(function(f){return f.ko;}), limit:recipeTimeLimitSec(S.level)}; },
+    start:startGame
+  };
+}
+setPhase('loading');
+preload(function(){
+  $('titleBest').textContent='최고 '+best().toLocaleString();
+  setPhase('title');
+});
+$('plv').textContent=CFG.perLevel+'개 · Lv1 약 '+Math.round(recipeMinCompletionSec(1)*CFG.perLevel)+'초';
+requestAnimationFrame(loop);
+})();
+</script>
