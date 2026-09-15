@@ -17,6 +17,7 @@
 | **컴포넌트 · 훅 규약** | `arch/components.md` |
 | 디렉터리 구조 | `arch/structure.md` |
 | 웹뷰 대응 | `arch/webview.md` |
+| **배포 (Cloudflare)** | `arch/deploy.md` |
 | 튜닝 노브 · 파생 함수 | `arch/tuning-api.md` |
 | 무드 · 타이포 | `art/mood.md` |
 | 색 (정본: `game/config/items.ts`) | `art/color.md` |
