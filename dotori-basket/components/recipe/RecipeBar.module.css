@@ -1,0 +1,20 @@
+.recipeBar {
+  width: 360px; margin-top: 8px; padding: 8px 10px 9px;
+  background: var(--deep); border: 2.5px solid var(--ink); border-radius: 14px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.timer {
+  height: 7px; background: rgba(255,255,255,.72);
+  border: 1.5px solid var(--rim); border-radius: 999px; overflow: hidden;
+}
+.timer i { display: block; height: 100%; width: 100%; background: var(--sage); transform-origin: 0 50%; }
+.timer.warn i { background: var(--red); }
+.queue { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; }
+.qi {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: rgba(255,255,255,.55);
+}
+.qi img { width: 30px; height: 30px; object-fit: contain; }
+.qi.now { background: rgba(196,32,43,.16); outline: 2.5px solid var(--red); outline-offset: -2px; }
+.qi.done { opacity: .28; }
+.arw { font-size: 12px; color: var(--muted); }

@@ -1,0 +1,7 @@
+/* 몸 축(35.9%)이 박스 중심과 달라, 가운데 정렬만으로는 왼쪽으로 치우쳐 보인다 */
+.hero { width: 132px; height: auto; transform: translateX(calc(50% - 35.9%)); }
+.best {
+  font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink);
+  background: rgba(255,255,255,.75); border: 1.5px solid var(--rim);
+  border-radius: 999px; padding: 3px 12px;
+}

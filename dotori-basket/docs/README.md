@@ -14,6 +14,7 @@
 | 키보드 · 터치 | `rules/input.md` |
 | 화면 전환 · 상태 머신 | `rules/state-machine.md` |
 | 스택 · React 성능 원칙 | `arch/stack.md` |
+| **컴포넌트 · 훅 규약** | `arch/components.md` |
 | 디렉터리 구조 | `arch/structure.md` |
 | 웹뷰 대응 | `arch/webview.md` |
 | 튜닝 노브 · 파생 함수 | `arch/tuning-api.md` |

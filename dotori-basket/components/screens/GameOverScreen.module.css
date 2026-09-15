@@ -1,0 +1,5 @@
+.score {
+  font-family: var(--disp); font-size: 44px; font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.best { font-size: 13px; color: var(--muted); }

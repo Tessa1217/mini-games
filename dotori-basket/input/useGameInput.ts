@@ -111,3 +111,5 @@ export function useGameInput(opts: {
     [pump, press, release, releaseAll],
   )
 }
+
+export type GameInput = ReturnType<typeof useGameInput>

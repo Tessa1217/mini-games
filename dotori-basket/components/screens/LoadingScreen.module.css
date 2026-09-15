@@ -1,0 +1,5 @@
+.bar {
+  width: 190px; height: 10px; border: 2px solid var(--rim);
+  border-radius: 999px; background: rgba(255,255,255,.7); overflow: hidden;
+}
+.bar i { display: block; height: 100%; width: 0; background: var(--sage); transition: width .18s; }

@@ -1,0 +1,41 @@
+/* 화면 공통 껍데기. ⚠️ 여기만 여러 컴포넌트가 나눠 쓰는 모듈이다 — arch/components.md §6 */
+
+/* 숲길 배경 — 게임 배경은 낙하 경로를 비워야 해서 좌우에만 나무가 있지만,
+   떨어지는 것이 없는 오버레이에서는 숲이 이어지는 편이 자연스럽다. */
+.screen {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px; padding: 22px;
+  text-align: center; background-color: var(--sky);
+  background-image: url(/assets/scene/bg-forest-full.jpg);
+  background-size: cover; background-position: center bottom; background-repeat: no-repeat;
+  z-index: 3;
+}
+.screen h1, .screen h2 {
+  font-family: var(--disp); margin: 0; line-height: 1.1; color: #fff;
+  -webkit-text-stroke: 4px var(--rim); paint-order: stroke fill;
+}
+.screen h1 { font-size: 34px; }
+.screen h2 { font-size: 26px; }
+.screen p {
+  margin: 0; font-size: 13.5px; color: var(--ink); max-width: 30ch; line-height: 1.55;
+  word-break: keep-all; background: rgba(255,255,255,.78); border-radius: 12px; padding: 7px 13px;
+}
+
+.bigBtn {
+  font-family: var(--disp); font-size: 23px; font-weight: 700; cursor: pointer;
+  background: var(--red); color: var(--paper); border: 3px solid var(--rim);
+  border-radius: 999px; padding: 10px 34px; min-width: 168px;
+}
+.bigBtn.ghost { background: var(--paper); color: var(--ink); }
+.bigBtn:active { transform: translateY(2px); }
+.bigBtn:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+
+/* 카드형 화면은 멈춘 판이 뒤에 비쳐야 한다 — 숲 배경 대신 스크림 */
+.scrim { background-color: rgba(74,58,42,.72); background-image: none; }
+.card {
+  background: var(--paper); border: 3px solid var(--rim); border-radius: 18px;
+  padding: 20px 24px; display: flex; flex-direction: column; align-items: center;
+  gap: 12px; max-width: 300px;
+}
+/* 카드 안에서는 흰 글씨 + 두꺼운 외곽선이 오히려 안 읽힌다 */
+.card h2.plain { color: var(--ink); -webkit-text-stroke: 0; }

@@ -31,6 +31,8 @@
 | 22 | **`localStorage`는 try/catch** | 시크릿 모드에서는 접근 자체가 throw한다 | `rules/hp-score.md` |
 | 23 | **스프라이트 경로는 `items.ts`의 `sprite` 필드.** 컴포넌트에서 조립 금지 | 아트가 있는 과일이 액박으로 나온다 | `rules/items.md` |
 | 24 | **`public/assets/items/` 한 폴더가 보유 현황.** 계보는 확장자가 말한다 | 계보로 폴더를 가르면 「이 과일 아트가 있나」를 두 폴더 뒤져야 안다 | `art/pipeline.md` |
+| 25 | **한 파일 = 한 책임.** 컴포넌트의 로직은 `hooks/` 로 내린다 | 367줄짜리 파일 하나가 상태·입력·루프·화면을 전부 들고 있었다 | `arch/components.md` |
+| 26 | **루프 `useEffect` 의존성은 빈 배열.** 매 렌더 바뀌는 값은 ref 로 | 콜백을 넣으면 HUD 갱신마다 루프가 재생성돼 아이템 풀이 비워진다 | `arch/components.md` |
 
 새 불변식을 발견하면 **고치고 끝내지 말고** ① 해당 문서에 `⭐` ② `history/`에 경위 기록
 ③ 이 표에 한 줄 추가. 그게 이 파일의 존재 이유다.
@@ -44,7 +46,7 @@
 | `game/tuning.ts` | `arch/tuning-api.md` · `rules/balance-policy.md` |
 | `game/systems/` | `rules/spawner.md` · `rules/recipe.md` · `rules/hp-score.md` |
 | `game/types.ts` | 변경 전 `grep -rln`으로 영향 매핑 + `arch/tuning-api.md` |
-| `components/` · `app/` | `art/layout.md` · `art/screen-specs.md` · `art/a11y.md` · `rules/state-machine.md` |
+| `components/` · `hooks/` · `app/` | **`arch/components.md` 먼저** · `art/layout.md` · `art/screen-specs.md` · `art/a11y.md` · `rules/state-machine.md` |
 | `game/engine/` | `arch/stack.md` (고정 타임스텝 · 노드 풀) |
 | `input/` | `rules/input.md` |
 | `platform/` | `arch/webview.md` |
