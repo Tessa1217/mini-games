@@ -34,6 +34,7 @@
 | 25 | **한 파일 = 한 책임.** 컴포넌트의 로직은 `hooks/` 로 내린다 | 367줄짜리 파일 하나가 상태·입력·루프·화면을 전부 들고 있었다 | `arch/components.md` |
 | 26 | **루프 `useEffect` 의존성은 빈 배열.** 매 렌더 바뀌는 값은 ref 로 | 콜백을 넣으면 HUD 갱신마다 루프가 재생성돼 아이템 풀이 비워진다 | `arch/components.md` |
 | 27 | **Cloudflare 어댑터를 넣지 않는다.** 서버 코드가 0이라 `out/` 이 완성품이다 | 정적 페이지 앞에 Worker 런타임만 더 세우게 된다 | `arch/deploy.md` |
+| 28 | **배포 출력 경로의 출처는 `wrangler.jsonc`.** 대시보드에 그 칸이 없다 | Pages 감각으로 찾다가 설정을 빠뜨린 줄 알고 헤맨다 | `arch/deploy.md` |
 
 새 불변식을 발견하면 **고치고 끝내지 말고** ① 해당 문서에 `⭐` ② `history/`에 경위 기록
 ③ 이 표에 한 줄 추가. 그게 이 파일의 존재 이유다.
@@ -51,7 +52,7 @@
 | `game/engine/` | `arch/stack.md` (고정 타임스텝 · 노드 풀) |
 | `input/` | `rules/input.md` |
 | `platform/` | `arch/webview.md` |
-| 배포 설정 · `next.config.mjs` | `arch/deploy.md` · `arch/webview.md` |
+| 배포 설정 · `wrangler.jsonc` · `next.config.mjs` | `arch/deploy.md` · `arch/webview.md` |
 | 에셋 (`public/assets/`) | `art/pipeline.md` · `art/sprites.md` · `art/color.md` |
 | `prototype/index.html` | **동결됨** — 원칙적으로 건드리지 않는다 |
 | `*.test.ts` | 대상 시스템의 `rules/` 문서 |

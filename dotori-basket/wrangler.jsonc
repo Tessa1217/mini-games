@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dotori-basket",
+  "compatibility_date": "2026-09-15",
+
+  // 스크립트 없는 **정적 자산 전용** Worker 다. main 을 두지 않는다 —
+  // 서버에서 도는 코드가 0줄이라 넣을 것이 없다. → docs/arch/deploy.md
+  "assets": {
+    "directory": "./out",
+    // out/ 에 404.html 이 실제로 존재한다(next export). SPA 모드로 두면
+    // 모든 경로가 index.html 로 덮여 404 가 사라진다
+    "not_found_handling": "404-page"
+  }
+}
