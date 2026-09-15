@@ -331,7 +331,7 @@
 <div id="panel">
   <h4>튜닝</h4>
   <p>미정으로 남아 있던 두 가지를 여기서 직접 만져보고 정하면 됩니다 —
-     수치는 <code>game/config/balance.ts</code>에서 그대로 읽어옵니다. 제한시간은 고정값이
+     수치는 <code>game/config/</code>에서 그대로 읽어옵니다. 제한시간은 고정값이
      아니라 «최소 소요 + 여유»로 <b>역산</b>되므로, 스폰이나 속도를 바꾸면 같이 움직입니다.
      난이도는 <b>낙하 속도</b>가 담당합니다 — 화면에 몇 개가 더 뜨는지는 레인이 5개라
      체감이 잘 안 바뀝니다. 계기판의 <b>회피여유</b>(낙하시간 − 끝에서 끝 이동시간)가
@@ -370,7 +370,7 @@
   조작 — 화면 버튼, 또는 <code>←</code> <code>→</code> / <code>A</code> <code>D</code>.
   키는 <code>event.code</code>로 읽어 한글 입력에서도 동작하고, OS 키 리피트는 무시하며,
   <code>blur</code>·탭 전환 시 눌림 상태를 리셋합니다(웹뷰 대응).
-  규칙은 <code>docs/PLAN.md</code> rev.5, 수치는 <code>game/config/balance.ts</code>.
+  규칙은 <code>docs/README.md</code>, 수치는 <code>game/config/</code>.
 </footer>
 
 <script>

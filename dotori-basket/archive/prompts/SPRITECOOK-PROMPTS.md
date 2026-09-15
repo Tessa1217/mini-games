@@ -1,3 +1,6 @@
+> ⚠️ **보존용 기록.** 에셋 생성 도구(SpriteCook 등) 사용은 중단이 확정됐다.
+> 새 에셋은 `docs/art/pipeline.md`의 절차를 따른다. 이 문서의 수치는 현행이 아니다.
+
 # SpriteCook Prompts — Dotori Forest Basket
 
 - 작성일: 2026-09-15

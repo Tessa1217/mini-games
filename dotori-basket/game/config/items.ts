@@ -3,7 +3,7 @@ import type { ItemDef, ItemId } from '../types'
 /**
  * 과일 16종 + 방해물 2종.
  *
- * 스프라이트는 레퍼런스 이미지를 potrace로 **벡터 추적**해 만들었다 (`assets/items.svg`).
+ * 현행 아트는 docs/art/sprites.md · docs/art/pipeline.md 를 본다.
  * 심볼 id는 `t-<id>` 형식이며, 렌더 레이어는 `<use href="#t-apple">`로 참조한다.
  *
  * `unlockLevel`은 **실루엣 구분이 쉬운 순서**로 배치했다 —
