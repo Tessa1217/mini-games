@@ -42,19 +42,20 @@
 | `game/tuning.ts` | `arch/tuning-api.md` · `rules/balance-policy.md` |
 | `game/systems/` | `rules/spawner.md` · `rules/recipe.md` · `rules/hp-score.md` |
 | `game/types.ts` | 변경 전 `grep -rln`으로 영향 매핑 + `arch/tuning-api.md` |
-| `components/` | `art/layout.md` · `art/screen-specs.md` · `art/a11y.md` · `rules/state-machine.md` |
+| `components/` · `app/` | `art/layout.md` · `art/screen-specs.md` · `art/a11y.md` · `rules/state-machine.md` |
+| `game/engine/` | `arch/stack.md` (고정 타임스텝 · 노드 풀) |
 | `input/` | `rules/input.md` |
 | `platform/` | `arch/webview.md` |
 | 에셋 | `art/pipeline.md` · `art/sprites.md` · `art/color.md` |
-| `prototype/index.html` | 해당 `rules/` + `prototype/README.md` + `game/config/` 값 동기화 |
+| `prototype/index.html` | **동결됨** — 원칙적으로 건드리지 않는다 |
 | `*.test.ts` | 대상 시스템의 `rules/` 문서 |
 | 밸런스 수치 | `rules/balance-policy.md` + `history/` 최신 rev |
 
 ## 작업 절차
 
-- **밸런스 수정** — ⚠️ 스캐폴딩 전까지는 `game/config/*` 와 `prototype/index.html`의 `BAL`
-  **두 곳**을 함께 고친다. 한 곳만 고치면 프로토타입이 옛 값으로 돌아
-  "실행해서 확인했다"가 **거짓 확인**이 된다. Next 앱이 `import { BALANCE }`로 바뀌면 이 줄을 지운다.
+- **밸런스 수정** — `game/config/*` 만 고친다. Next 앱이 `import { BALANCE }`로 읽으므로
+  단일 출처가 성립한다. `prototype/`은 동결된 참조 구현이라 옛 값을 들고 있다 — **거기서 뽑은
+  수치를 현행으로 쓰지 않는다.**
 - 수정 후 **실행해서 표를 뽑아** 보고한다(레벨별 낙하·밀도·정답간격·최소소요·제한시간·회피여유).
   추정치로 보고하지 않는다.
 - **`game/` 수정** — Vitest 필수. 경계값(레벨 0·음수·소수·`NaN`·`Infinity`)을 포함한다.

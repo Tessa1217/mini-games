@@ -14,10 +14,10 @@ dotori-basket/
 │       ├── index.ts          BALANCE 9키 조립
 │       ├── lane · movement · hp · scoring · recipe · spawner · levelUp · levels · endless
 │       └── items.ts          ⚠️ BalanceConfig 멤버가 아니다 — 별도 export
-├── assets/
+├── public/assets/            ★ 배포되는 것만 여기
 │   ├── game/                 실사용 PNG/JPG (128px 트림)
-│   ├── authored/             실측으로 손수 만든 SVG
-│   └── generated/            SpriteCook 원본 — 쓰지 않지만 실측 기준이라 지우지 않는다
+│   └── authored/             실측으로 손수 만든 SVG
+├── assets/generated/         SpriteCook 원본 5.2MB — public/ 밖. 실측 기준용이라 배포하지 않는다
 ├── prototype/                동결된 참조 구현 (index.html · README.md)
 └── archive/prompts/          보존용 기록 — 에셋 생성 금지 확정 전 문서
 ```
@@ -30,7 +30,7 @@ components/   stage/ · hud/ · controls/ · overlays/
 game/systems/ spawner · collision · recipe · scoring · level · hp
 game/engine/  loop · store · pool
 input/ platform/ storage/
-public/assets/   ← assets/ 를 여기로 옮긴다 (지금 옮기면 프로토타입이 깨진다)
+(완료)
 ```
 
 `game/`이 React를 import하지 않는 것이 핵심이다. 규칙 로직을 프레임워크와 분리하면

@@ -1,0 +1,34 @@
+:root {
+  --sky: #C4E1F4;
+  --grass: #B4C391;
+  --ink: #4A3A2A;
+  --rim: #46200E;
+  --paper: #FBF4E4;
+  --deep: #F3E7CD;
+  --line: #DFCFAE;
+  --sage: #7E8C70;
+  --red: #C4202B;
+  --muted: #8A7B63;
+  --disp: 'Gaegu', system-ui, sans-serif;
+  --body: 'Gowun Dodum', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+
+/* el.hidden 을 쓰는 곳이 있다. UA 의 display:none 은 한 줄짜리라
+   display:flex 같은 규칙에 특이도로 진다. 여기서 한 번 못박는다. */
+[hidden] { display: none !important; }
+
+button { font: inherit; color: inherit; }

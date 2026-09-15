@@ -6,11 +6,14 @@
 
 | 디렉터리 | 내용 | 계보 | 재측정 |
 |---|---|---|---|
-| `assets/generated/` | SpriteCook 원본 7장 (1024px) | 생성물. 배포 가능 | **기준값 출처 — 지우지 않는다** |
-| `assets/game/` | 실사용 PNG/JPG 8개 | `generated/`를 128px로 트림·축소 | 가능 (원본이 있다) |
-| `assets/authored/` | 수박·배·체리·돌멩이·나뭇가지 SVG | 손으로 그린 베지에 | **불가 — 실물 SVG가 유일 기준** |
+| `assets/generated/` | SpriteCook 원본 7장 (5.2MB) | 생성물 | **기준값 출처 — 지우지 않는다** |
+| `public/assets/game/` | 실사용 PNG/JPG 8개 | `generated/`를 128px로 트림·축소 | 가능 (원본이 있다) |
+| `public/assets/authored/` | 수박·배·체리·돌멩이·나뭇가지 SVG | 손으로 그린 베지에 | **불가 — 실물 SVG가 유일 기준** |
 
-`assets/game/bg-forest-full.jpg`만 예외로, `generated/bg-forest.png`에서 나무를 잘라 조립한
+⚠️ `generated/`는 **`public/` 밖에 둔다.** 런타임에 쓰지 않는 5.2MB가 매 배포마다
+정적 번들에 실리면 안 된다. 실측할 때만 로컬에서 연다.
+
+`public/assets/game/bg-forest-full.jpg`만 예외로, `assets/generated/bg-forest.png`에서 나무를 잘라 조립한
 합성물이다(아래 참조).
 
 ## 새 아이템을 그릴 때

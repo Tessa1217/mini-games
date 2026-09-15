@@ -29,7 +29,7 @@
     border:3px solid var(--ink); border-radius:16px; background:var(--sky);
     touch-action:none; contain:paint;}
   #bg{position:absolute; left:0; bottom:0; width:360px; height:360px;
-    background:url(../assets/game/bg.jpg) center/cover no-repeat;}
+    background:url(../public/assets/game/bg.jpg) center/cover no-repeat;}
   #laneHi{position:absolute; top:0; left:0; width:72px; height:100%;
     background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.28) 78%);
     pointer-events:none;}
@@ -110,7 +110,7 @@
   .screen{position:absolute; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:14px; padding:22px;
     text-align:center; background-color:var(--sky);
-    background-image:url(../assets/game/bg-forest-full.jpg);
+    background-image:url(../public/assets/game/bg-forest-full.jpg);
     background-size:cover; background-position:center bottom; background-repeat:no-repeat;}
   .screen[hidden]{display:none!important}
   .screen h2{font-family:var(--disp); font-size:34px; margin:0; line-height:1.1;
@@ -224,7 +224,7 @@
     <div id="laneHi"></div>
     <div id="catch"></div>
     <div id="items"></div>
-    <div id="squirrel"><img src="../assets/game/squirrel.png" alt="바구니를 든 다람쥐" class="rim2"></div>
+    <div id="squirrel"><img src="../public/assets/game/squirrel.png" alt="바구니를 든 다람쥐" class="rim2"></div>
 
     <div id="hud">
       <div class="row">
@@ -257,7 +257,7 @@
 
     <div class="screen" id="scr-title" hidden>
       <h2>도토리 숲 바구니</h2>
-      <img class="hero" src="../assets/game/squirrel.png" alt="바구니를 든 다람쥐">
+      <img class="hero" src="../public/assets/game/squirrel.png" alt="바구니를 든 다람쥐">
       <p>레시피에 적힌 <b>순서대로</b> 과일을 받으세요.</p>
       <button class="big-btn" id="btnStart">시작하기</button>
       <button class="big-btn ghost" id="btnTut">놀이법</button>
@@ -267,23 +267,23 @@
     <div class="screen" id="scr-tut" hidden>
       <h2>놀이법</h2>
       <div class="rule">
-        <span class="ic two"><img src="../assets/game/apple.png" alt=""><img src="../assets/game/banana.png" alt=""></span>
+        <span class="ic two"><img src="../public/assets/game/apple.png" alt=""><img src="../public/assets/game/banana.png" alt=""></span>
         <span><b>순서대로 받기</b><span>아래 레시피의 <b>빨간 칸</b>이 지금 받을 과일입니다.
           왼쪽부터 차례로 채웁니다.</span></span>
       </div>
       <div class="rule">
-        <span class="ic"><img src="../assets/game/squirrel.png" alt=""></span>
+        <span class="ic"><img src="../public/assets/game/squirrel.png" alt=""></span>
         <span><b>좌우로 움직이기</b><span>화면 아래 버튼, 또는
           <span class="keycap">←</span> <span class="keycap">→</span> 키.
           바구니가 있는 줄에 떨어진 것만 받습니다.</span></span>
       </div>
       <div class="rule">
-        <span class="ic"><img src="../assets/game/grape.png" alt=""></span>
+        <span class="ic"><img src="../public/assets/game/grape.png" alt=""></span>
         <span><b>순서가 아니면 깎여요</b><span>레시피에 있는 과일이라도 <b>차례가 아니면</b>
           받으면 안 됩니다.</span></span>
       </div>
       <div class="rule">
-        <span class="ic two"><img src="../assets/authored/stone.svg" alt=""><img src="../assets/authored/twig.svg" alt=""></span>
+        <span class="ic two"><img src="../public/assets/authored/stone.svg" alt=""><img src="../public/assets/authored/twig.svg" alt=""></span>
         <span><b>돌멩이와 나뭇가지는 피하기</b><span>먹을 수 없는 것들입니다.
           받으면 도토리가 깎입니다.</span></span>
       </div>
@@ -411,16 +411,16 @@ var BAL={
    아트가 있는 것만 넣는다. items.ts에는 과일 16종이 있지만 Lv8 이후 해금분은
    아직 그림이 없어 프로토타입 풀은 8종에서 멈춘다. */
 var ITEMS=[
-  {id:'apple',      ko:'사과',     obstacle:false, unlock:1, src:'../assets/game/apple.png'},
-  {id:'tangerine',  ko:'귤',       obstacle:false, unlock:1, src:'../assets/game/tangerine.png'},
-  {id:'banana',     ko:'바나나',   obstacle:false, unlock:1, src:'../assets/game/banana.png'},
-  {id:'strawberry', ko:'딸기',     obstacle:false, unlock:1, src:'../assets/game/strawberry.png'},
-  {id:'grape',      ko:'포도',     obstacle:false, unlock:2, src:'../assets/game/grape.png'},
-  {id:'watermelon', ko:'수박',     obstacle:false, unlock:3, src:'../assets/authored/watermelon.svg'},
-  {id:'pear',       ko:'배',       obstacle:false, unlock:4, src:'../assets/authored/pear.svg'},
-  {id:'cherry',     ko:'체리',     obstacle:false, unlock:5, src:'../assets/authored/cherry.svg'},
-  {id:'stone',      ko:'돌멩이',   obstacle:true,  unlock:3, src:'../assets/authored/stone.svg'},
-  {id:'twig',       ko:'나뭇가지', obstacle:true,  unlock:3, src:'../assets/authored/twig.svg'}
+  {id:'apple',      ko:'사과',     obstacle:false, unlock:1, src:'../public/assets/game/apple.png'},
+  {id:'tangerine',  ko:'귤',       obstacle:false, unlock:1, src:'../public/assets/game/tangerine.png'},
+  {id:'banana',     ko:'바나나',   obstacle:false, unlock:1, src:'../public/assets/game/banana.png'},
+  {id:'strawberry', ko:'딸기',     obstacle:false, unlock:1, src:'../public/assets/game/strawberry.png'},
+  {id:'grape',      ko:'포도',     obstacle:false, unlock:2, src:'../public/assets/game/grape.png'},
+  {id:'watermelon', ko:'수박',     obstacle:false, unlock:3, src:'../public/assets/authored/watermelon.svg'},
+  {id:'pear',       ko:'배',       obstacle:false, unlock:4, src:'../public/assets/authored/pear.svg'},
+  {id:'cherry',     ko:'체리',     obstacle:false, unlock:5, src:'../public/assets/authored/cherry.svg'},
+  {id:'stone',      ko:'돌멩이',   obstacle:true,  unlock:3, src:'../public/assets/authored/stone.svg'},
+  {id:'twig',       ko:'나뭇가지', obstacle:true,  unlock:3, src:'../public/assets/authored/twig.svg'}
 ];
 var ACTIVE_FRUIT_CAP=8;
 function unlockedFruits(lv){
@@ -893,8 +893,8 @@ window.addEventListener('resize',fit);
 /* ══ 프리로드 — 첫 과일이 팝인으로 나타나지 않게 ══════════════ */
 function preload(done){
   var urls=ITEMS.map(function(i){ return i.src; })
-    .concat(['../assets/game/squirrel.png','../assets/game/bg.jpg',
-             '../assets/game/bg-forest-full.jpg']);
+    .concat(['../public/assets/game/squirrel.png','../public/assets/game/bg.jpg',
+             '../public/assets/game/bg-forest-full.jpg']);
   var loaded=0, bar=$('loadBar');
   function tick(){
     loaded++;

@@ -1,0 +1,26 @@
+{
+  "name": "dotori-basket",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:webview": "BUILD_TARGET=webview next build",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "motion": "12.23.12",
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
+}
