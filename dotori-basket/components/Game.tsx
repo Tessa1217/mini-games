@@ -13,7 +13,10 @@ import {
 import { createRecipe, recipeTimeLimitSec, isWarning } from '@/game/systems/recipe'
 import { catchScore, completionBonus, comboMultiplier } from '@/game/systems/scoring'
 import { initialHp, applyDamage, isDead, type HpState } from '@/game/systems/hp'
-import { shouldLevelUp } from '@/game/systems/level'
+import { shouldLevelUp, newlyUnlocked } from '@/game/systems/level'
+import {
+  LoadingScreen, TitleScreen, TutorialScreen, UnlockCard, PauseScreen, GameOverScreen,
+} from './Screens'
 import { useGameInput } from '@/input/useGameInput'
 import { onHidden } from '@/platform/visibility'
 import { loadBest, saveBest } from '@/storage/highScore'
@@ -28,12 +31,9 @@ const SQ_W = 82
 const SQ_AXIS = 0.359
 const laneX = (i: number) => i * LANE_W + (LANE_W - ITEM) / 2
 
-const srcOf = (d: ItemDef) =>
-  d.kind === 'obstacle' || ['watermelon', 'pear', 'cherry'].includes(d.id)
-    ? `/assets/authored/${d.id === 'grape' ? 'grape' : d.id}.svg`
-    : `/assets/game/${d.id}.png`
+const srcOf = (d: ItemDef) => d.sprite
 
-type Phase = 'title' | 'playing' | 'paused' | 'over'
+type Phase = 'loading' | 'title' | 'tutorial' | 'playing' | 'paused' | 'unlock' | 'over'
 
 /** 매 프레임 바뀌는 값은 여기 둔다 — React state 에 두면 60fps 리렌더가 된다 */
 interface Mutable {
@@ -53,7 +53,8 @@ interface Mutable {
 }
 
 export default function Game() {
-  const [phase, setPhase] = useState<Phase>('title')
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [unlocked, setUnlocked] = useState<{ level: number; items: ItemDef[] }>({ level: 1, items: [] })
   const [hud, setHud] = useState({ hp: BALANCE.hp.max, score: 0, level: 1, combo: 1 })
   const [recipe, setRecipe] = useState<{ items: ItemDef[]; idx: number }>({ items: [], idx: 0 })
   const [best, setBest] = useState(0)
@@ -123,8 +124,8 @@ export default function Game() {
     },
     onConfirm: () => {
       const p = phaseRef.current
-      if (p === 'title' || p === 'over') { reset(); setPhase('playing') }
-      else if (p === 'paused') setPhase('playing')
+      if (p === 'title' || p === 'tutorial' || p === 'over') { reset(); setPhase('playing') }
+      else if (p === 'paused' || p === 'unlock') setPhase('playing')
     },
   })
 
@@ -139,8 +140,13 @@ export default function Game() {
       if (c.idx >= c.recipe.length) {
         c.score += completionBonus(c.recipe.length)
         c.recipesInLevel += 1
-        if (shouldLevelUp(c.recipesInLevel)) { c.level += 1; c.recipesInLevel = 0 }
+        let leveled = false
+        if (shouldLevelUp(c.recipesInLevel)) { c.level += 1; c.recipesInLevel = 0; leveled = true }
         newRecipe(now)
+        if (leveled) {
+          const fresh = newlyUnlocked(c.level)
+          if (fresh.length > 0) { setUnlocked({ level: c.level, items: fresh }); setPhase('unlock') }
+        }
       } else syncRecipe()
     } else {
       const before = c.hp.hp
@@ -243,6 +249,28 @@ export default function Game() {
 
   useEffect(() => { setBest(loadBest()) }, [])
 
+  /** ?dbg 로 열리는 테스트 훅 — 레벨업까지 손으로 가는 비용이 커서 둔다 */
+  useEffect(() => {
+    if (!/[?&]dbg\b/.test(window.location.search)) return
+    Object.assign(window, {
+      __dbg: {
+        jump(lv: number) {
+          m.current.level = lv
+          m.current.recipesInLevel = 0
+          newRecipe(performance.now())
+          syncHud()
+          const fresh = newlyUnlocked(lv)
+          setUnlocked({ level: lv, items: fresh })
+          setPhase(fresh.length > 0 ? 'unlock' : 'playing')
+        },
+        state: () => ({
+          phase: phaseRef.current, level: m.current.level, hp: m.current.hp.hp,
+          score: m.current.score, recipe: m.current.recipe.map((f) => f.label),
+        }),
+      },
+    })
+  }, [newRecipe, syncHud])
+
   // 화면 맞춤
   useEffect(() => {
     const fit = () => {
@@ -267,7 +295,7 @@ export default function Game() {
           <div className={s.laneHi} ref={laneHiRef} />
           <div className={s.items} ref={itemsRef} />
           <div className={s.squirrel} ref={sqRef}>
-            <img src="/assets/game/squirrel.png" alt="바구니를 든 다람쥐" className={s.rim2} />
+            <img src="/assets/scene/squirrel.png" alt="바구니를 든 다람쥐" className={s.rim2} />
           </div>
 
           <div className={s.hud}>
@@ -284,11 +312,24 @@ export default function Game() {
             <span className={s.score}>{hud.score.toLocaleString()}</span>
           </div>
 
-          {phase !== 'playing' && (
-            <Overlay
-              phase={phase} score={hud.score} best={best}
-              onStart={start} onResume={() => setPhase('playing')}
-            />
+          {phase === 'loading' && <LoadingScreen onDone={() => setPhase('title')} />}
+          {phase === 'title' && (
+            <TitleScreen best={best} onStart={start} onTutorial={() => setPhase('tutorial')} />
+          )}
+          {phase === 'tutorial' && (
+            <TutorialScreen onStart={start} onBack={() => setPhase('title')} />
+          )}
+          {phase === 'unlock' && (
+            <UnlockCard level={unlocked.level} items={unlocked.items}
+              onClose={() => setPhase('playing')} />
+          )}
+          {phase === 'paused' && (
+            <PauseScreen onResume={() => setPhase('playing')} onRestart={start}
+              onTitle={() => setPhase('title')} />
+          )}
+          {phase === 'over' && (
+            <GameOverScreen score={hud.score} best={best} onRestart={start}
+              onTitle={() => setPhase('title')} />
           )}
         </div>
 
@@ -322,62 +363,5 @@ export default function Game() {
         </div>
       </div>
     </main>
-  )
-}
-
-function Overlay(p: {
-  phase: Phase; score: number; best: number
-  onStart: () => void; onResume: () => void
-}) {
-  const box: React.CSSProperties = {
-    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center', gap: 14, padding: 22,
-    textAlign: 'center', background: 'rgba(74,58,42,.62)',
-  }
-  const btn: React.CSSProperties = {
-    fontFamily: 'var(--disp)', fontSize: 22, fontWeight: 700, cursor: 'pointer',
-    background: 'var(--red)', color: 'var(--paper)', border: '3px solid var(--rim)',
-    borderRadius: 999, padding: '10px 34px', minWidth: 168,
-  }
-  const card: React.CSSProperties = {
-    background: 'var(--paper)', border: '3px solid var(--rim)', borderRadius: 18,
-    padding: '22px 26px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-  }
-  if (p.phase === 'title') {
-    return (
-      <div style={{ ...box, background: 'rgba(196,225,244,.94)' }}>
-        <h1 style={{ fontFamily: 'var(--disp)', fontSize: 36, margin: 0 }}>도토리 숲 바구니</h1>
-        <img src="/assets/game/squirrel.png" alt="" width={120} style={{ height: 'auto' }} />
-        <p style={{ margin: 0, fontSize: 14, wordBreak: 'keep-all', maxWidth: '30ch' }}>
-          레시피에 적힌 <b>순서대로</b> 과일을 받으세요.
-        </p>
-        <button style={btn} onClick={p.onStart}>시작하기</button>
-        {p.best > 0 && <span className="best">최고 {p.best.toLocaleString()}</span>}
-      </div>
-    )
-  }
-  if (p.phase === 'paused') {
-    return (
-      <div style={box}>
-        <div style={card}>
-          <h2 style={{ fontFamily: 'var(--disp)', fontSize: 26, margin: 0 }}>잠깐 멈춤</h2>
-          <button style={btn} onClick={p.onResume}>계속하기</button>
-          <button style={{ ...btn, background: 'var(--paper)', color: 'var(--ink)' }}
-            onClick={p.onStart}>다시하기</button>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div style={box}>
-      <div style={card}>
-        <h2 style={{ fontFamily: 'var(--disp)', fontSize: 28, margin: 0 }}>게임 오버</h2>
-        <div style={{ fontFamily: 'var(--disp)', fontSize: 44, fontWeight: 700, lineHeight: 1.1 }}>
-          {p.score.toLocaleString()}
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--muted)' }}>최고 {p.best.toLocaleString()}</div>
-        <button style={btn} onClick={p.onStart}>다시하기</button>
-      </div>
-    </div>
   )
 }

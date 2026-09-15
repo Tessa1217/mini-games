@@ -15,8 +15,8 @@ dotori-basket/
 │       ├── lane · movement · hp · scoring · recipe · spawner · levelUp · levels · endless
 │       └── items.ts          ⚠️ BalanceConfig 멤버가 아니다 — 별도 export
 ├── public/assets/            ★ 배포되는 것만 여기
-│   ├── game/                 실사용 PNG/JPG (128px 트림)
-│   └── authored/             실측으로 손수 만든 SVG
+│   ├── items/                아이템 스프라이트 17종 — 보유 현황이 한눈에 (계보는 확장자가 말한다)
+│   └── scene/                다람쥐 · 배경
 ├── assets/generated/         SpriteCook 원본 5.2MB — public/ 밖. 실측 기준용이라 배포하지 않는다
 ├── prototype/                동결된 참조 구현 (index.html · README.md)
 └── archive/prompts/          보존용 기록 — 에셋 생성 금지 확정 전 문서

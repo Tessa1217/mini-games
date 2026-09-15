@@ -4,23 +4,33 @@
 
 ## 계보 — 어떤 파일이 어디서 왔나
 
-| 디렉터리 | 내용 | 계보 | 재측정 |
-|---|---|---|---|
-| `assets/generated/` | SpriteCook 원본 7장 (5.2MB) | 생성물 | **기준값 출처 — 지우지 않는다** |
-| `public/assets/game/` | 실사용 PNG/JPG 8개 | `generated/`를 128px로 트림·축소 | 가능 (원본이 있다) |
-| `public/assets/authored/` | 수박·배·체리·돌멩이·나뭇가지 SVG | 손으로 그린 베지에 | **불가 — 실물 SVG가 유일 기준** |
+| 디렉터리 | 내용 | 배포 |
+|---|---|---|
+| `public/assets/items/` | 아이템 스프라이트 **전 17종** | O |
+| `public/assets/scene/` | 다람쥐 · 배경 2장 | O |
+| `assets/generated/` | SpriteCook 원본 7장 (5.2MB) | **X — 실측 기준용** |
+
+⭐ **디렉터리는 역할로 나눈다. 계보는 확장자가 말한다.**
+
+| 확장자 | 계보 | 재측정 |
+|---|---|---|
+| `.png` | SpriteCook 생성물의 128px 트림본. **5종에서 더 늘지 않는다**(생성 금지) | 가능 — `generated/`에 원본이 있다 |
+| `.svg` | 실측 수치로 직접 그린 베지에 | **불가 — 실물 SVG가 유일 기준** |
+
+계보로 폴더를 갈랐더니 「이 과일 아트가 있나」를 두 폴더를 뒤져야 알 수 있었다.
+보유 여부는 `items/` 한 곳이 답하고, 계보는 확장자가 답한다.
 
 ⚠️ `generated/`는 **`public/` 밖에 둔다.** 런타임에 쓰지 않는 5.2MB가 매 배포마다
 정적 번들에 실리면 안 된다. 실측할 때만 로컬에서 연다.
 
-`public/assets/game/bg-forest-full.jpg`만 예외로, `assets/generated/bg-forest.png`에서 나무를 잘라 조립한
+`public/assets/scene/bg-forest-full.jpg`만 예외로, `assets/generated/bg-forest.png`에서 나무를 잘라 조립한
 합성물이다(아래 참조).
 
 ## 새 아이템을 그릴 때
 
 1. **기준값을 실측한다** — 기존 스프라이트에서 뽑는다. 눈대중으로 정하지 않는다.
    ```
-   윤곽선  #46200E · stroke-width 2.4   (assets/authored/*.svg 5개 실측)
+   윤곽선  #46200E · stroke-width 2.4   (수박·배·체리·돌멩이·나뭇가지 실측)
    채색    영역당 단일 톤. 그라데이션·명암층 없음
    잎      #7E8C70
    ```

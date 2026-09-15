@@ -11,7 +11,7 @@
 export type FruitId =
   | 'apple' | 'tangerine' | 'banana' | 'strawberry' | 'grape' | 'watermelon'
   | 'pear' | 'cherry' | 'lemon' | 'pineapple' | 'peach'
-  | 'blueberry' | 'avocado' | 'kiwi' | 'grapefruit' | 'apple_cut'
+  | 'blueberry' | 'avocado' | 'kiwi' | 'grapefruit'
 
 /** 레시피에 절대 등장하지 않는다 — 받으면 항상 오답 */
 export type ObstacleId = 'stone' | 'twig'
@@ -31,6 +31,11 @@ export interface ItemDef {
   weight: number
   /** HUD 대표색. 스프라이트 채색이 아니다 → docs/art/color.md */
   color: string
+  /**
+   * 스프라이트 경로. **컴포넌트에서 경로를 조립하지 않는다** —
+   * 하드코딩 목록을 쓰다가 아트가 없는 과일이 액박으로 나온 적이 있다.
+   */
+  sprite: string
   /** 에셋 교체 전 플레이스홀더 */
   placeholder: string
 }

@@ -40,7 +40,7 @@ python3 -m http.server 8742
 장식이 있으면 안 되기 때문이다. 그런데 로딩·타이틀·놀이법 화면은 떨어지는 게 없으므로
 가운데가 빈 하늘이면 오히려 이질적이다.
 
-그래서 **생성 없이 기존 배경에서 조립**했다 (`assets/game/bg-forest-full.jpg`, 44KB).
+그래서 **생성 없이 기존 배경에서 조립**했다 (`assets/scene/bg-forest-full.jpg`, 44KB).
 
 1. 왼쪽 나무가 **줄기 바로 오른쪽에서 프레임에 잘려** 있다(줄기 x 0~31). x=0에서 미러링하면
    줄기 하나짜리 온전한 나무가 복원된다.
@@ -101,12 +101,12 @@ __dbg.start()    // 새 판 시작
 
 | 영역 | 출처 |
 |---|---|
-| 과일 5종 (사과·귤·바나나·딸기·포도) | `assets/game/*.png` — SpriteCook 생성물을 128px로 트림·축소 |
-| 과일 3종 (수박·배·체리) | `assets/authored/*.svg` — 생성물에서 실측한 수치로 직접 작업 |
-| 방해물 2종 (돌멩이·나뭇가지) | `assets/authored/*.svg` — 과일과 실루엣이 겹치지 않게 |
-| 배경(게임) | `assets/game/bg.jpg` + 위쪽은 단색 `#C4E1F4` |
-| 배경(화면 오버레이) | `assets/game/bg-forest-full.jpg` — 아래 참조 |
-| 주인공 | `assets/game/squirrel.png` |
+| 과일 5종 (사과·귤·바나나·딸기·포도) | `assets/items/*.png` — SpriteCook 생성물을 128px로 트림·축소 |
+| 과일 3종 (수박·배·체리) | `assets/items/*.svg` — 생성물에서 실측한 수치로 직접 작업 |
+| 방해물 2종 (돌멩이·나뭇가지) | `assets/items/*.svg` — 과일과 실루엣이 겹치지 않게 |
+| 배경(게임) | `assets/scene/bg.jpg` + 위쪽은 단색 `#C4E1F4` |
+| 배경(화면 오버레이) | `assets/scene/bg-forest-full.jpg` — 아래 참조 |
+| 주인공 | `assets/scene/squirrel.png` |
 
 에셋 총량 **137KB**. 원본 1024px PNG를 그대로 쓰면 3.7MB다.
 

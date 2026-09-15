@@ -41,6 +41,7 @@ rev6-levelup.md         레벨업 정책 · 세션 길이 충돌 해소
 rev6-art-pivot.md       아트 방향 재정의 (명암 6층 폐기)
 rev6-trace-notes.md     벡터 추적 기록 (산출물은 라이선스 정리로 삭제됨)
 rev7-speed.md           난이도 축을 개수에서 속도로
+rev8-assets.md          미제작 7종 제작 · 경로를 데이터로 · 아이템 폴더 재편
 superseded-*.md         폐기 — 수채 · 동물 스킨 · 배경 테마
 open-questions.md       미검증 · 미결 ❓
 ```
