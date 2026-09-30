@@ -32,8 +32,10 @@ export const ITEMS: Record<ItemId, ItemDef> = {
   grapefruit: { id:'grapefruit', label:'자몽',   kind:'fruit', neverInRecipe:false, unlockLevel:12, weight:3, color:'#FC847D', sprite:'/assets/items/grapefruit.svg', placeholder:'🍊' },
 
   // ── 방해물: 레시피에 절대 등장하지 않는다 ──────────────
-  stone:      { id:'stone',      label:'돌멩이',   kind:'obstacle', neverInRecipe:true, unlockLevel:3, weight:6, color:'#918D86', sprite:'/assets/items/stone.svg', placeholder:'🪨' },
-  twig:       { id:'twig',       label:'나뭇가지', kind:'obstacle', neverInRecipe:true, unlockLevel:3, weight:4, color:'#8A6B4F', sprite:'/assets/items/twig.svg', placeholder:'🪵' },
+  // 페널티가 갈린다. 가벼운 것(나뭇가지)을 먼저 풀어 "피할 것"이라는 개념을 가르치고,
+  // 무거운 것(돌멩이)을 나중에 준다. 한 번에 하나씩.
+  twig:       { id:'twig',       label:'나뭇가지', kind:'obstacle', neverInRecipe:true, unlockLevel:3, weight:6, color:'#8A6B4F', sprite:'/assets/items/twig.svg', placeholder:'🪵', penalty:{ kind:'combo' } },
+  stone:      { id:'stone',      label:'돌멩이',   kind:'obstacle', neverInRecipe:true, unlockLevel:5, weight:4, color:'#918D86', sprite:'/assets/items/stone.svg', placeholder:'🪨', penalty:{ kind:'hp', amount:2 } },
 }
 
 export const ALL_ITEM_IDS = Object.keys(ITEMS) as ItemId[]

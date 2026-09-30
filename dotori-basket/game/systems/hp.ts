@@ -1,3 +1,4 @@
+import type { ItemDef, ItemPenalty } from '../types'
 import { BALANCE } from '../config'
 
 export interface HpState {
@@ -23,3 +24,12 @@ export function applyDamage(state: HpState, amount: number, nowMs: number): HpSt
 }
 
 export const isDead = (s: HpState) => s.hp <= 0
+
+/**
+ * 받았을 때의 벌칙을 결정한다.
+ * 방해물은 자기 `penalty` 를, 오답 과일은 `hp.wrongCatchHp` 를 따른다.
+ * 셋 다 정답 행동은 "피한다"로 같으므로 플레이 중 판단 부담은 오르지 않는다.
+ */
+export function resolvePenalty(def: ItemDef): ItemPenalty {
+  return def.penalty ?? { kind: 'hp', amount: BALANCE.hp.wrongCatchHp }
+}

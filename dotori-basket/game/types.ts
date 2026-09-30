@@ -1,5 +1,5 @@
 /**
- * 도토리 숲 바구니 — 공용 타입
+ * 냥이의 과일 레시피 — 공용 타입
  *
  * 이 디렉터리(game/)는 React를 import하지 않는다. → docs/arch/structure.md
  * 값의 근거는 docs/ 에 있다. 여기에는 계약(단위·범위·필수 여부)만 적는다.
@@ -16,6 +16,15 @@ export type FruitId =
 /** 레시피에 절대 등장하지 않는다 — 받으면 항상 오답 */
 export type ObstacleId = 'stone' | 'twig'
 
+/**
+ * 방해물을 받았을 때 일어나는 일.
+ * 셋 다 정답 행동은 **"피한다"로 같다** — 차이는 실패했을 때만 드러난다.
+ * 그래서 종류가 늘어도 플레이 중 판단 부담은 오르지 않는다. → docs/rules/items.md
+ */
+export type ItemPenalty =
+  | { kind: 'hp'; amount: number }   // 체력 감소 + 무적
+  | { kind: 'combo' }                // 콤보만 끊는다. 체력은 그대로
+
 export type ItemId = FruitId | ObstacleId
 
 export interface ItemDef {
@@ -27,7 +36,11 @@ export interface ItemDef {
   neverInRecipe: boolean
   /** 이 레벨부터 스폰 대상 */
   unlockLevel: number
-  /** Phase 2 (무게 → 속도 가중) 용. 현재 미사용 */
+  /**
+   * 스폰 가중치. **현재 방해물에만 읽는다** — 페널티가 갈려 빈도 조절이 필요하기 때문이다.
+   * 과일의 값은 폐기된 Phase 2(무게 → 낙하속도) 잔재이고 아무도 읽지 않는다.
+   * 아이템별 낙하속도는 채택 불가다 → `docs/rules/spawner.md`
+   */
   weight: number
   /** HUD 대표색. 스프라이트 채색이 아니다 → docs/art/color.md */
   color: string
@@ -38,6 +51,11 @@ export interface ItemDef {
   sprite: string
   /** 에셋 교체 전 플레이스홀더 */
   placeholder: string
+  /**
+   * 받았을 때의 벌칙. **방해물만 지정한다** —
+   * 과일을 오답으로 받으면 `BALANCE.hp.wrongCatchHp` 를 따른다.
+   */
+  penalty?: ItemPenalty
 }
 
 // ── 밸런싱 ────────────────────────────────────────────────
@@ -76,6 +94,8 @@ export interface HpConfig {
   missPenaltyHp: number
   /** 정답을 놓쳤을 때 콤보를 끊을지 */
   missResetsCombo: boolean
+  /** 과일을 **순서 틀리게** 받았을 때 HP 감소량. 방해물은 각자 penalty 를 가진다 */
+  wrongCatchHp: number
 }
 
 /** → docs/rules/hp-score.md */

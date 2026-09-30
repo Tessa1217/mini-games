@@ -43,6 +43,21 @@ function crossLimitOk(live: readonly Falling[], crossAt: number): boolean {
   return n < BALANCE.spawner.simultaneousCrossLimit
 }
 
+/**
+ * `weight` 비례 추첨. 방해물은 페널티가 갈리므로 균등하면 절반이 무거운 쪽이 된다.
+ * 합이 0이거나 음수가 섞여도 마지막 항목으로 떨어져 undefined 를 반환하지 않는다.
+ */
+function pickWeighted(items: readonly ItemDef[], rand: () => number): ItemDef {
+  const total = items.reduce((sum, i) => sum + Math.max(0, i.weight), 0)
+  if (total <= 0) return items[items.length - 1]!
+  let r = rand() * total
+  for (const item of items) {
+    r -= Math.max(0, item.weight)
+    if (r < 0) return item
+  }
+  return items[items.length - 1]!
+}
+
 /** 같은 레인의 직전 아이템이 충분히 내려갔는지 — *어디에* 스폰할지를 막는다 */
 function laneGapOk(live: readonly Falling[], lane: number, spawnY: number): boolean {
   return !live.some(
@@ -70,7 +85,7 @@ function pickDef(ctx: SpawnContext, rand: () => number): { def: ItemDef; isCorre
   const obstacles = unlockedObstacles(ctx.level)
   const r = rand()
   if (r < t.obstacleDropRate && obstacles.length > 0) {
-    return { def: obstacles[Math.floor(rand() * obstacles.length)]!, isCorrect: false }
+    return { def: pickWeighted(obstacles, rand), isCorrect: false }
   }
   if (r < t.obstacleDropRate + t.correctSpawnRatio) {
     return { def: ctx.target, isCorrect: true }

@@ -8,7 +8,7 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <div className={shell.screen}>
-      <h1>도토리 숲 바구니</h1>
+      <h1>냥이의 과일 레시피</h1>
       <p>그림을 불러오는 중…</p>
       <div className={s.bar}><i style={{ width: `${pct}%` }} /></div>
     </div>

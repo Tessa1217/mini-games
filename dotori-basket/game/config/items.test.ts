@@ -29,6 +29,24 @@ describe('스프라이트 — 액박 방지', () => {
   })
 })
 
+describe('방해물 — 페널티와 가중치', () => {
+  const obstacles = ALL_ITEM_IDS.map((id) => ITEMS[id]).filter((i) => i.kind === 'obstacle')
+
+  it('모든 방해물이 penalty 를 갖는다 — 없으면 오답 과일과 구분이 사라진다', () => {
+    for (const o of obstacles) expect(o.penalty, `${o.id} 에 penalty 없음`).toBeDefined()
+  })
+
+  it('과일은 penalty 를 갖지 않는다', () => {
+    for (const id of ALL_ITEM_IDS) {
+      if (ITEMS[id].kind === 'fruit') expect(ITEMS[id].penalty).toBeUndefined()
+    }
+  })
+
+  it('방해물 weight 는 양수다 — 0 이면 영원히 안 나온다', () => {
+    for (const o of obstacles) expect(o.weight).toBeGreaterThan(0)
+  })
+})
+
 describe('해금', () => {
   it('Lv1 에 과일이 최소 4종 — 2종이면 가능한 레시피가 2가지뿐이다', () => {
     expect(activeFruits(1).length).toBeGreaterThanOrEqual(4)
@@ -49,6 +67,18 @@ describe('해금', () => {
   it('방해물은 Lv3 부터 나온다', () => {
     expect(unlockedObstacles(2)).toHaveLength(0)
     expect(unlockedObstacles(3).length).toBeGreaterThan(0)
+  })
+
+  it('방해물 해금이 흩어져 있다 — 페널티가 다르니 한 번에 하나씩 가르친다', () => {
+    const levels = Object.values(ITEMS)
+      .filter((i) => i.kind === 'obstacle')
+      .map((i) => i.unlockLevel)
+    expect(new Set(levels).size).toBe(levels.length)
+  })
+
+  it('가벼운 방해물이 먼저 풀린다 — 첫 방해물이 체력을 깎으면 안 된다', () => {
+    const first = unlockedObstacles(3)
+    expect(first.every((o) => o.penalty?.kind === 'combo')).toBe(true)
   })
 
   it('해금 레벨에 빈 구간이 없다 — 레벨업했는데 새 과일이 없으면 배너가 심심해진다', () => {

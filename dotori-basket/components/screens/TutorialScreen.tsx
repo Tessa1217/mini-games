@@ -39,11 +39,11 @@ export default function TutorialScreen(p: { onStart: () => void; onBack: () => v
       </Rule>
 
       <Rule title="돌멩이와 나뭇가지는 피하기" icons={[ITEMS.stone.sprite, ITEMS.twig.sprite]}>
-        먹을 수 없는 것들입니다. 받으면 도토리가 깎입니다.
+        먹을 수 없는 것들입니다. 받으면 체력이 깎입니다.
       </Rule>
 
       <Rule title="시간 안에 채우기" emoji="⏳">
-        레시피 위 막대가 남은 시간. 다 줄면 도토리가 깎이고 레시피가 새로 나옵니다.
+        레시피 위 막대가 남은 시간. 다 줄면 체력이 깎이고 레시피가 새로 나옵니다.
       </Rule>
 
       <div className={s.tutActs}>

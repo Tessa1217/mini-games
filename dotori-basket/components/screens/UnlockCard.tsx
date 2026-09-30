@@ -4,17 +4,32 @@ import s from './UnlockCard.module.css'
 import type { ItemDef } from '@/game/types'
 import { BALANCE } from '@/game/config'
 
+/**
+ * 방해물마다 벌칙이 다르므로 **무엇을 잃는지 여기서 알려준다.**
+ * 이 문구가 없으면 플레이어는 죽고 나서야 돌멩이가 두 칸을 먹는다는 걸 안다.
+ */
+function penaltyText(def: ItemDef): string | null {
+  const p = def.penalty
+  if (!p) return null
+  return p.kind === 'combo' ? '콤보가 끊겨요' : `체력 −${p.amount}`
+}
+
 function Group({ title, items, warn }: { title: string; items: ItemDef[]; warn?: boolean }) {
   if (items.length === 0) return null
   return (
     <div className={`${s.grp} ${warn ? s.warn : ''}`}>
       <h3>{title}</h3>
       <div className={s.row}>
-        {items.map((f) => (
-          <span key={f.id} className={s.it}>
-            <img src={f.sprite} alt={f.label} /><span>{f.label}</span>
-          </span>
-        ))}
+        {items.map((f) => {
+          const cost = penaltyText(f)
+          return (
+            <span key={f.id} className={s.it}>
+              <img src={f.sprite} alt={f.label} />
+              <span>{f.label}</span>
+              {cost && <span className={s.cost}>{cost}</span>}
+            </span>
+          )
+        })}
       </div>
     </div>
   )

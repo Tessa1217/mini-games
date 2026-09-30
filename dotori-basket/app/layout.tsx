@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '도토리 숲 바구니',
+  title: '냥이의 과일 레시피',
   description: '레시피에 적힌 순서대로 과일을 받는 미니 게임',
 }
 

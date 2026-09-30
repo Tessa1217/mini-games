@@ -8,7 +8,7 @@ export default function TitleScreen(p: {
 }) {
   return (
     <div className={shell.screen}>
-      <h1>도토리 숲 바구니</h1>
+      <h1>냥이의 과일 레시피</h1>
       <img className={s.hero} src="/assets/scene/squirrel.png" alt="바구니를 든 다람쥐" />
       <p>레시피에 적힌 <b>순서대로</b> 과일을 받으세요.</p>
       <button className={shell.bigBtn} onClick={p.onStart}>시작하기</button>

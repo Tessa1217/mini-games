@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BALANCE } from '../config'
 import { ITEMS } from '../config/items'
 import { planSpawn, nextSpawnDelaySec, fallSpeedPxPerSec, type Falling } from './spawner'
+import { unlockedObstacles } from '../config/items'
 
 const apple = ITEMS.apple
 const base = {
@@ -107,5 +108,43 @@ describe('낙하 속도', () => {
       const fallMs = (BALANCE.lane.catchLineY / fallSpeedPxPerSec(lv)) * 1000
       expect(fallMs).toBeGreaterThan(crossMs)
     }
+  })
+})
+
+describe('방해물 가중 추첨 — 페널티가 갈리므로 빈도를 조절해야 한다', () => {
+  /** 결정적 LCG. 통계 검증에 Math.random 을 쓰면 테스트가 간헐적으로 깨진다 */
+  const seeded = (seed: number) => () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0
+    return seed / 0x1_0000_0000
+  }
+
+  it('weight 비율대로 뽑힌다', () => {
+    const LEVEL = 7
+    const obstacles = unlockedObstacles(LEVEL)
+    expect(obstacles.length).toBeGreaterThan(1)
+
+    const total = obstacles.reduce((s, o) => s + o.weight, 0)
+    const rand = seeded(42)
+    const hits = new Map(obstacles.map((o) => [o.id, 0]))
+
+    let drawn = 0
+    for (let i = 0; i < 20_000 && drawn < 4000; i++) {
+      const r = planSpawn({ ...base, level: LEVEL, rand })
+      if (!r.ok || r.isCorrect || r.def.kind !== 'obstacle') continue
+      hits.set(r.def.id, hits.get(r.def.id)! + 1)
+      drawn++
+    }
+    expect(drawn).toBeGreaterThan(500)
+
+    for (const o of obstacles) {
+      const share = hits.get(o.id)! / drawn
+      expect(share, `${o.id} 비율 ${share.toFixed(3)}`).toBeCloseTo(o.weight / total, 1)
+    }
+  })
+
+  it('가벼운 쪽(나뭇가지)이 무거운 쪽(돌멩이)보다 자주 나온다', () => {
+    const twig = unlockedObstacles(7).find((o) => o.id === 'twig')!
+    const stone = unlockedObstacles(7).find((o) => o.id === 'stone')!
+    expect(twig.weight).toBeGreaterThan(stone.weight)
   })
 })

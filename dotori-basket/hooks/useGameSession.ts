@@ -5,7 +5,7 @@ import type { ItemDef } from '@/game/types'
 import { BALANCE } from '@/game/config'
 import { createRecipe, recipeTimeLimitSec } from '@/game/systems/recipe'
 import { catchScore, completionBonus, comboMultiplier } from '@/game/systems/scoring'
-import { initialHp, applyDamage, isDead, type HpState } from '@/game/systems/hp'
+import { initialHp, applyDamage, isDead, resolvePenalty, type HpState } from '@/game/systems/hp'
 import { shouldLevelUp, newlyUnlocked } from '@/game/systems/level'
 import { loadBest, saveBest } from '@/storage/highScore'
 import { clampLane } from '@/components/stage/geometry'
@@ -89,6 +89,28 @@ export function useGameSession(on: {
     if (next !== c.lane) { c.lane = next; c.tilt = dir }
   }, [])
 
+  /**
+   * 잘못 받았을 때. 방해물은 각자의 `penalty` 를, 오답 과일은 `hp.wrongCatchHp` 를 따른다.
+   * 셋 다 정답 행동은 "피한다"로 같으므로 플레이 중 판단 부담은 오르지 않는다.
+   */
+  const penalize = useCallback((def: ItemDef, now: number) => {
+    const c = state.current
+    const penalty = resolvePenalty(def)
+
+    if (penalty.kind === 'combo') {
+      if (c.combo === 0) return        // 이미 0이면 리렌더할 이유가 없다
+      c.combo = 0
+      syncHud()
+      return
+    }
+
+    const before = c.hp.hp
+    c.hp = applyDamage(c.hp, penalty.amount, now)
+    if (c.hp.hp !== before) c.combo = 0
+    syncHud()
+    if (isDead(c.hp)) endGame()
+  }, [endGame, syncHud])
+
   /** 정답 획득. ★ 레벨업이 먼저다 — 새 레시피가 새 레벨 기준으로 나와야 한다 */
   const caught = useCallback((def: ItemDef, now: number) => {
     const c = state.current
@@ -96,11 +118,7 @@ export function useGameSession(on: {
     const correct = def.kind === 'fruit' && target && def.id === target.id
 
     if (!correct) {
-      const before = c.hp.hp
-      c.hp = applyDamage(c.hp, 1, now)
-      if (c.hp.hp !== before) c.combo = 0
-      syncHud()
-      if (isDead(c.hp)) endGame()
+      penalize(def, now)
       return
     }
 
@@ -124,7 +142,7 @@ export function useGameSession(on: {
 
     const unlocked = newlyUnlocked(c.level)
     if (unlocked.length > 0) onRef.current.onUnlock(c.level, unlocked)
-  }, [endGame, newRecipe, syncHud, syncRecipe])
+  }, [newRecipe, penalize, syncHud, syncRecipe])
 
   /** 정답을 놓쳐 지나갔다 */
   const missed = useCallback((def: ItemDef) => {
