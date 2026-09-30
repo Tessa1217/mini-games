@@ -83,6 +83,28 @@ export interface MovementConfig {
   holdRepeatMs: number
 }
 
+/**
+ * → docs/rules/obstacles.md
+ * ⚠️ BalanceConfig 의 멤버가 아니다 — items 처럼 별도 export 다
+ */
+export interface CrowConfig {
+  /** 스프라이트 경로. 컴포넌트에서 조립하지 않는다 */
+  sprite: string
+  /** 이 레벨부터 등장 */
+  fromLevel: number
+  /** 등장 주기(초) · 지터 폭(초) */
+  intervalSec: number
+  intervalJitterSec: number
+  /** ⭐ 예고 시간(초). 0 이면 플레이어가 개입할 수 없는 순수 RNG 손실이 된다 */
+  warningSec: number
+  /** 가로지르는 시간(초) */
+  flySec: number
+  /** 한 번에 먹는 과일 수 · 상향 레벨 · 상한 */
+  eatCount: number
+  eatCountFromLevel: number
+  eatCountMax: number
+}
+
 /** → docs/rules/hp-score.md */
 export interface HpConfig {
   max: number

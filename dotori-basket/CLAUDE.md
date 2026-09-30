@@ -31,6 +31,9 @@
 | 22 | **`localStorage`는 try/catch** | 시크릿 모드에서는 접근 자체가 throw한다 | `rules/hp-score.md` |
 | 23 | **스프라이트 경로는 `items.ts`의 `sprite` 필드.** 컴포넌트에서 조립 금지 | 아트가 있는 과일이 액박으로 나온다 | `rules/items.md` |
 | 24 | **`public/assets/items/` 한 폴더가 보유 현황.** 계보는 확장자가 말한다 | 계보로 폴더를 가르면 「이 과일 아트가 있나」를 두 폴더 뒤져야 안다 | `art/pipeline.md` |
+| 25 | **까마귀는 스포너를 타지 않는다** — 받는 물건이 아니라 이벤트다 | 아이템별 속도가 `crossAt` 을 거짓으로 만들어 동시통과 상한이 무너진다 | `rules/obstacles.md` |
+| 26 | **까마귀 예고(`warningSec`)를 0으로 두지 않는다** | 플레이어가 개입할 수 없는 순수 RNG 손실이 된다 | `rules/obstacles.md` |
+| 27 | **풀에서 재사용되는 노드의 클래스는 `paintFallingSprite` 에서 지운다** | 까마귀에게 찍힌 표식이 다음 과일에 남는다 | `arch/components.md` |
 | 25 | **한 파일 = 한 책임.** 컴포넌트의 로직은 `hooks/` 로 내린다 | 367줄짜리 파일 하나가 상태·입력·루프·화면을 전부 들고 있었다 | `arch/components.md` |
 | 26 | **루프 `useEffect` 의존성은 빈 배열.** 매 렌더 바뀌는 값은 ref 로 | 콜백을 넣으면 HUD 갱신마다 루프가 재생성돼 아이템 풀이 비워진다 | `arch/components.md` |
 | 27 | **Cloudflare 어댑터를 넣지 않는다.** 서버 코드가 0이라 `out/` 이 완성품이다 | 정적 페이지 앞에 Worker 런타임만 더 세우게 된다 | `arch/deploy.md` |
@@ -53,6 +56,7 @@
 | `input/` | `rules/input.md` |
 | `platform/` | `arch/webview.md` |
 | 배포 설정 · `wrangler.jsonc` · `next.config.mjs` | `arch/deploy.md` · `arch/webview.md` |
+| 방해물 · 까마귀 | `rules/obstacles.md` |
 | 에셋 (`public/assets/`) | `art/pipeline.md` · `art/sprites.md` · `art/color.md` |
 | `prototype/index.html` | **동결됨** — 원칙적으로 건드리지 않는다 |
 | `*.test.ts` | 대상 시스템의 `rules/` 문서 |

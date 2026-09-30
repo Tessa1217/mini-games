@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import s from './Game.module.css'
 import Stage from './stage/Stage'
+import Crow from './stage/Crow'
 import Hud from './hud/Hud'
 import RecipeBar from './recipe/RecipeBar'
 import LaneControls from './controls/LaneControls'
@@ -63,6 +64,7 @@ export default function Game() {
     <main className={s.page}>
       <div className={s.fit} ref={fitRef}>
         <Stage refs={refs}>
+          <Crow phase={session.crow.phase} y={session.crow.y} />
           <Hud hp={session.hud.hp} level={session.hud.level} score={session.hud.score}
             onPause={phase.pauseIfPlaying} />
           <ScreenLayer

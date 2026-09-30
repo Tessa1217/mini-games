@@ -11,6 +11,7 @@
 | HP · 점수 · 콤보 | `rules/hp-score.md` |
 | 레벨 곡선 · 난이도 표 | `rules/levels.md` · `rules/balance-policy.md` |
 | 과일 해금 · 활성 풀 | `rules/items.md` |
+| **방해물 · 까마귀** | `rules/obstacles.md` |
 | 키보드 · 터치 | `rules/input.md` |
 | 화면 전환 · 상태 머신 | `rules/state-machine.md` |
 | 스택 · React 성능 원칙 | `arch/stack.md` |

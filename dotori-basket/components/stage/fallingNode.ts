@@ -22,6 +22,14 @@ export function paintFallingSprite(el: HTMLElement, def: ItemDef) {
   const img = el.firstElementChild as HTMLImageElement
   img.src = def.sprite
   img.alt = def.label
+  // ⚠️ 노드는 풀에서 재사용된다. 여기서 지우지 않으면 까마귀에게 찍혔던 노드가
+  //    다음 과일로 되살아날 때 표식을 달고 나온다.
+  el.classList.remove(s.doomed!)
+}
+
+/** 까마귀가 노린 과일 — 예고 동안 표시해 "뺏기기 전에 잡자"를 만든다 */
+export function markDoomed(el: HTMLElement, on: boolean) {
+  el.classList.toggle(s.doomed!, on)
 }
 
 export function moveFalling(el: HTMLElement, lane: number, y: number) {

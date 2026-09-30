@@ -17,7 +17,8 @@
 types.ts      계약(단위·범위·필수)만. 설계 근거는 docs/ 에
 tuning.ts     tuningForLevel · recipeTimeLimitSec · correctGapSec · recipeMinCompletionSec
 config/       값만. index.ts 가 BALANCE 9키를 조립한다
-  └ items.ts  ⚠️ BalanceConfig 의 멤버가 아니다 — 별도 export
+  ├ items.ts  ⚠️ BalanceConfig 의 멤버가 아니다 — 별도 export
+  └ crow.ts   ⚠️ 〃 (BalanceConfig 는 9키 고정)
 ```
 
 - 소비자는 `config/index.ts`의 `BALANCE`만 import한다

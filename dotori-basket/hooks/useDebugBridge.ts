@@ -21,11 +21,13 @@ export function useDebugBridge(deps: {
     Object.assign(window, {
       __dbg: {
         jump: (level: number) => live.current.onJump(level),
+        /** 까마귀를 지금 부른다 — 주기가 14초라 손으로 기다릴 수 없다 */
+        crow: () => { live.current.session.state.current.crowIn = 0 },
         state: () => {
           const c = live.current.session.state.current
           return {
             phase: live.current.phase.ref.current,
-            level: c.level, hp: c.hp.hp, score: c.score,
+            level: c.level, hp: c.hp.hp, score: c.score, crow: c.crowPhase,
             recipe: c.recipe.map((f) => f.label),
           }
         },

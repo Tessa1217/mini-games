@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { ITEMS } from '@/game/config/items'
+import { crow } from '@/game/config/crow'
 
 const SCENE = [
+  crow.sprite,
   '/assets/scene/squirrel.png',
   '/assets/scene/bg.jpg',
   '/assets/scene/bg-forest-full.jpg',

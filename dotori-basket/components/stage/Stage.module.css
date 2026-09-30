@@ -29,3 +29,34 @@
   will-change: transform; transform-origin: 35.9% 100%;
 }
 .squirrel img { width: 82px; height: 104px; object-fit: contain; display: block; }
+
+/* 까마귀가 노린 과일. 채도가 아니라 **테두리**로 알린다 —
+   과일 자체를 흐리면 "이게 정답인가"를 다시 판단하게 된다 */
+.doomed { outline: 3px solid var(--red); outline-offset: -1px; border-radius: 10px; }
+.doomed img { animation: doomShake .32s ease-in-out infinite; }
+@keyframes doomShake {
+  0%, 100% { transform: translateX(-1.5px) }
+  50%      { transform: translateX(1.5px) }
+}
+
+/* 까마귀는 가로로 지나간다 — 아래로 떨어지지 않아야 "받는 게 아니다"가 읽힌다 */
+.crow {
+  position: absolute; left: 0; width: 64px; height: 64px;
+  pointer-events: none; z-index: 1; will-change: transform;
+}
+.crow img { width: 64px; height: 64px; display: block; }
+.crowWarn { animation: crowPeek .5s ease-out both; }
+.crowFly  { animation: crowFly var(--fly, .9s) linear both; }
+@keyframes crowPeek {
+  from { transform: translate3d(-64px, 14px, 0) rotate(-10deg); opacity: 0 }
+  to   { transform: translate3d(-6px, 0, 0) rotate(-4deg); opacity: 1 }
+}
+@keyframes crowFly {
+  from { transform: translate3d(-6px, 0, 0) rotate(-4deg) }
+  55%  { transform: translate3d(170px, -22px, 0) rotate(3deg) }
+  to   { transform: translate3d(400px, -44px, 0) rotate(7deg) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doomed img { animation: none }
+  .crowWarn, .crowFly { animation-duration: .01ms }
+}

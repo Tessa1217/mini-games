@@ -7,6 +7,7 @@ import { createRecipe, recipeTimeLimitSec } from '@/game/systems/recipe'
 import { catchScore, completionBonus, comboMultiplier } from '@/game/systems/scoring'
 import { initialHp, applyDamage, isDead, resolvePenalty, type HpState } from '@/game/systems/hp'
 import { shouldLevelUp, newlyUnlocked } from '@/game/systems/level'
+import { nextCrowDelaySec, type CrowPhase } from '@/game/systems/crow'
 import { loadBest, saveBest } from '@/storage/highScore'
 import { clampLane } from '@/components/stage/geometry'
 
@@ -25,6 +26,12 @@ export interface MutableState {
   timeMax: number
   spawnIn: number
   lastCorrectSpawnMs: number
+  /** 까마귀 — 이벤트라 스포너와 무관하다. 전부 dt 누적이다(일시정지에 얼어야 한다) */
+  crowPhase: CrowPhase
+  crowIn: number
+  crowLeft: number
+  /** 노린 과일의 높이 — 비행·퇴장에서도 같은 높이를 유지한다 */
+  crowY: number
 }
 
 const fresh = (now: number): MutableState => ({
@@ -32,6 +39,7 @@ const fresh = (now: number): MutableState => ({
   recipe: [], idx: 0, recipesInLevel: 0, timeLeft: 0, timeMax: 1,
   spawnIn: 0.6,
   lastCorrectSpawnMs: now,   // ★ 0 을 넣으면 기아 방지가 즉시 참이 되어 첫 스폰이 항상 정답
+  crowPhase: 'idle', crowIn: nextCrowDelaySec(), crowLeft: 0, crowY: 300,
 })
 
 /**
@@ -49,6 +57,11 @@ export function useGameSession(on: {
   const [hud, setHud] = useState({ hp: BALANCE.hp.max, score: 0, level: 1, combo: 1 })
   const [recipe, setRecipe] = useState<{ items: ItemDef[]; idx: number }>({ items: [], idx: 0 })
   const [best, setBest] = useState(0)
+  /**
+   * 까마귀 연출용. 14초에 한 번 바뀌므로 state 로 둔다 — 60fps 값이 아니다.
+   * `y` 는 노린 과일의 높이 — 엉뚱한 데서 날아오면 무엇을 노리는지 안 읽힌다.
+   */
+  const [crow, setCrow] = useState<{ phase: CrowPhase; y: number }>({ phase: 'idle', y: 300 })
 
   const syncHud = useCallback(() => {
     const c = state.current
@@ -79,6 +92,7 @@ export function useGameSession(on: {
   const reset = useCallback(() => {
     const now = performance.now()
     state.current = fresh(now)
+    setCrow({ phase: 'idle', y: 300 })
     newRecipe(now)
     syncHud()
   }, [newRecipe, syncHud])
@@ -177,9 +191,9 @@ export function useGameSession(on: {
   const readBest = useCallback(() => setBest(loadBest()), [])
 
   return useMemo(() => ({
-    state, hud, recipe, best,
+    state, hud, recipe, best, crow, setCrow,
     reset, move, caught, missed, timedOut, jumpToLevel, readBest,
-  }), [hud, recipe, best, reset, move, caught, missed, timedOut, jumpToLevel, readBest])
+  }), [hud, recipe, best, crow, reset, move, caught, missed, timedOut, jumpToLevel, readBest])
 }
 
 export type GameSession = ReturnType<typeof useGameSession>
