@@ -6,3 +6,4 @@ coverage/
 *.local
 *.tsbuildinfo
 .wrangler/
+.playwright-mcp/
